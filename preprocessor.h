@@ -1,12 +1,12 @@
 char *processFile(char *fileName);
-struct macro
+struct Macro
 {
     int name;
     char *data;
-    struct macro *next;
+    struct Macro *next;
 };
-typedef struct macro *Macroptr;
-typedef struct macro {
+typedef struct Macro *Macroptr;
+typedef struct Macro {
     int name;
     char *data;
     Macroptr next;

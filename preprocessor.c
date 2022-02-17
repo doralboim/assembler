@@ -11,7 +11,7 @@ char *processFile(char *fileName)
     int isMacro = FALSE;
     char *line, *firstFieldInLine, *processedFileName;
     FILE *originalFp, *processedFp;
-    MacroNode *macrosStart, *tail;
+    MacroNode *macrosListHead, *currentMacro;
 
     processedFileName = createProcessedFileName(fileName);
     addFileExtension(fileName);
@@ -24,15 +24,26 @@ char *processFile(char *fileName)
         {
             sscanf(line, "%s", firstFieldInLine);
 
+            /* reference to macro, insert macro data to the processed file */
             if (fieldInMacros(firstFieldInLine))
             {
-                writeMacro(firstFieldInLine, processedFp);
+                replaceWithMacro(firstFieldInLine, line, processedFp);
             }
-            else if (strcmp(firstFieldInLine, "mcro") == 0)
+
+            /* macro definition - add it to the macros list */
+            else if (strcmp(firstFieldInLine, "macro") == 0)
             {
                 isMacro = TRUE;
-                addMacro(line);
+                currentMacro = addMacro(line);
             }
+
+            /* duration of macro code - add to currentMacro data */
+            else if (isMacro && !strcmp(firstFieldInLine, "endm"))
+            {
+                addDataToMacro(currentMacro, line);
+            }
+
+            /* "regular line" without macro reference - copy it to the processed file */
             else
             {
                 fputs(line, processedFp);
