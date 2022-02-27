@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "assemblerConstants.h"
+#include "constants.h"
 #include "preprocessor.h"
 
 /* parsing macros from source code to processed source code file */
@@ -19,7 +19,7 @@ char *processFile(char *fileName)
     if ((originalFp = fopen(fileName, "r")) != NULL &&
         (processedFp = fopen(processedFileName, "w")) != NULL)
     {
-        while ((fgets(line, maxLineSize, originalFp)) != NULL)
+        while ((fgets(line, MAX_LINE_SIZE, originalFp)) != NULL)
 
         {
             sscanf(line, "%s", firstFieldInLine);
