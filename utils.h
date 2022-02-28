@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UITL_H
+#ifndef HANDLE_SYMBOL_TABLE_H
+#define HANDLE_SYMBOL_TABLE_H
 
 #include "assembler.h"
 int *insertSymbolToTable(SymbolNode *table , InstructionNode **instructions, char *symbol, int IC, int attribute);
