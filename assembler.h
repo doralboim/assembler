@@ -24,6 +24,6 @@ typedef struct symbol_node {
     struct symbol_node *next;
 } SymbolNode;
 
-int startAssemblerFirstIteration(char *fileName, InstructionNode **instructions);
+int startAssemblerFirstIteration(char *fileName);
 
 #endif

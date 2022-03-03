@@ -8,17 +8,17 @@
 #include "instructions.h"
 
 SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute);
-int isLegalSymbol(char *symbol, InstructionNode **instructions);
-int isInstruction(char *symbol, InstructionNode **instructions);
+int isLegalSymbol(char *symbol);
+int isInstruction(char *symbol);
 int isRegister(char *symbol);
 
 
-int *insertSymbolToTable(SymbolNode *tableHead , InstructionNode **instructions, char *symbolName, int IC, SymbolAttribute attribute)
+int *insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, SymbolAttribute attribute)
 {
     SymbolNode *ptr, *newSymbol;
     int i;
     
-    if (isLegalSymbol(symbolName, instructions)) return FALSE;
+    if (isLegalSymbol(symbolName)) return FALSE;
 
     newSymbol = createNewSymbol(symbolName, IC, attribute);
     if (tableHead->value == 0)
@@ -63,9 +63,9 @@ SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute)
 }
 
 
-int isLegalSymbol(char *symbol, InstructionNode **instructions)
+int isLegalSymbol(char *symbol)
 {
-    return (isRegister(symbol) || isInstruction(symbol, instructions));
+    return (isRegister(symbol) || isInstruction(symbol));
 }
 
 
@@ -95,14 +95,14 @@ int isRegister(char *symbol)
 }
 
 
-int isInstruction(char *symbol, InstructionNode **instructions)
+int isInstruction(char *symbol)
 {
     int i;
     for (i = 0; i < INSTRUCTIONS_AMOUNT; i++)
     {
-        if (strcmp(symbol, instructions[i]->name) == 0)
+        if (strcmp(symbol, COMMANDS[i].name) == 0)
         {
-            printf("symbol %s is an instruction: %s!! \n", symbol, instructions[i]);
+            printf("symbol %s is an instruction: %s!! \n", symbol, COMMANDS[i]);
             return TRUE;
         }
     }

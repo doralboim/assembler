@@ -12,10 +12,9 @@
 int main(int argc, char *argv[])
 {
     // int *preprocessedFile;
-    // InstructionNode *mov;
-    InstructionNode **instructions;
+    // ActionNode *mov;
+    ActionNode **instructions;
     instructions = createAllInstructions();
-
     int i;
     // for (i=0; i < 16;i++)
     //     printf("node: %s: %u -> %u -> %u -> %u\n", instructions[i]->name, instructions[i]->funct, instructions[i]->opcode, instructions[i]->sourceAdressingMethods, instructions[i]->targetAdressingMethods);

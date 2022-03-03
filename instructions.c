@@ -7,10 +7,10 @@
 #include "instructions.h"
 
 
-InstructionNode *createInstruction(char *name, uint8_t opcode, uint8_t funct, uint8_t sourceAddressing, uint8_t targetAddressing)
+ActionNode *createInstruction(char *name, uint8_t opcode, uint8_t funct, uint8_t sourceAddressing, uint8_t targetAddressing)
 {
-    InstructionNode *newNode;
-    newNode = (InstructionNode *) malloc(sizeof(InstructionNode));
+    ActionNode *newNode;
+    newNode = (ActionNode *) malloc(sizeof(ActionNode));
     strcpy(newNode->name, name);
     newNode->funct = funct;
     newNode->opcode = opcode;
@@ -21,9 +21,9 @@ InstructionNode *createInstruction(char *name, uint8_t opcode, uint8_t funct, ui
 }
 
 
-InstructionNode **createAllInstructions()
+ActionNode **createAllInstructions()
  {
-     InstructionNode **allInstructions = (InstructionData *) malloc(sizeof(InstructionData) * INSTRUCTIONS_AMOUNT);
+     ActionNode **allInstructions = (InstructionData *) malloc(sizeof(InstructionData) * INSTRUCTIONS_AMOUNT);
      
      
      allInstructions[0] = createInstruction("mov", 0, 0, ALL_ADDRESSING_METHODS, DIRECT_INDEX_REGISTER_ADDRESSING);

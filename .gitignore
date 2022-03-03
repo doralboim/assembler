@@ -2,4 +2,8 @@
 Plan*
 .vscode*
 *.o
+dataHandler
+startAssembler
+startAssembler.o
 handleData
+instructions
