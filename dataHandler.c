@@ -55,7 +55,6 @@ int encodeData(char line[], int dataImage[], int dc)
             }
     }
     return dc;
-
 }
 
 int main(int argc, char const *argv[])

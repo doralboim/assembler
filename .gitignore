@@ -7,3 +7,6 @@ startAssembler
 startAssembler.o
 handleData
 instructions
+encoder
+test
+utils

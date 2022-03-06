@@ -6,11 +6,11 @@
 #include "assembler.h"
 #include "constants.h"
 #include "instructions.h"
+#include "utils.h"
 
 SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute);
 int isLegalSymbol(char *symbol);
-int isInstruction(char *symbol);
-int isRegister(char *symbol);
+int isCommand(char *symbol);
 
 
 int *insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, SymbolAttribute attribute)
@@ -65,40 +65,14 @@ SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute)
 
 int isLegalSymbol(char *symbol)
 {
-    return (isRegister(symbol) || isInstruction(symbol));
+    return (isRegister(symbol) || isCommand(symbol));
 }
 
 
-int isRegister(char *symbol)
-{
-    char *ptr = (char *) malloc(strlen(symbol));
-    strcpy(ptr, symbol);
-    
-    if (strlen(ptr) == 2)
-    {
-        if (*ptr == 'r' && isdigit(*(ptr + 1)))
-        {
-            printf("symbol %s is a register!\n", symbol);
-            return TRUE;
-        }
-    }
-    else if (strlen(ptr) == 3)
-    {
-        if (*ptr == 'r' && isdigit(*(ptr + 1)) && isdigit(*(ptr + 2)))
-        {
-            printf("symbol %s is a register!\n", symbol);
-            return TRUE;
-        }
-    }
-    
-    return FALSE;
-}
-
-
-int isInstruction(char *symbol)
+int isCommand(char *symbol)
 {
     int i;
-    for (i = 0; i < INSTRUCTIONS_AMOUNT; i++)
+    for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
         if (strcmp(symbol, COMMANDS[i].name) == 0)
         {

@@ -5,7 +5,7 @@
 int *insertSymbolToTable(SymbolNode *table, char *symbol, int IC, int attribute);
 int isLegalSymbol(char *symbol);
 int isRegister(char *symbol);
-int isInstruction(char *symbol);
+int isCommand(char *symbol);
 SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute);
 
 #endif

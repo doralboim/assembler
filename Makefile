@@ -4,8 +4,13 @@
 # startAssembler.o: startAssembler.c constants.h instructions.h assembler.h symbolTableHandler.h
 # 	gcc -c -ansi -Wall -pedantic startAssembler.c -o startAssembler.o
 	
-instructions.o: instructions.c instructions.h constants.h assembler.h
-	gcc -ansi -Wall -pedantic instructions.c -o instructions
+# instructions.o: instructions.c instructions.h constants.h assembler.h
+# 	gcc -ansi -Wall -pedantic instructions.c -o instructions
 
 # symbolTableHandler.o: symbolTableHandler.c constants.h instructions.h assembler.h
 # 	gcc -c -ansi -Wall -pedantic symbolTableHandler.c -o symbolTableHandler.o
+
+utils: utils.o
+	gcc -Wall -pedantic utils.o -o utils
+utils.o: utils.c constants.h utils.h
+	gcc -c -ansi -Wall -pedantic utils.c -o utils.o
