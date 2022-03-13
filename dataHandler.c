@@ -57,19 +57,19 @@ int encodeData(char line[], int dataImage[], int dc)
     return dc;
 }
 
-int main(int argc, char const *argv[])
-{
-    int data[100];
-    int dc = 0, res;
-    // char delimiter = ",";
-    // printf("dc is: %d\n", dc);
-    //data = (int *) calloc(0, sizeof(int) * 100);
-    char line[30] = ".data 124,64,346"; // ".string \"abdckjt\"";
-    char line2[30] = ".string \"abdckjt\"";
-    res=encodeData(line, data, dc);
+// int main(int argc, char const *argv[])
+// {
+//     int data[100];
+//     int dc = 0, res;
+//     // char delimiter = ",";
+//     // printf("dc is: %d\n", dc);
+//     //data = (int *) calloc(0, sizeof(int) * 100);
+//     char line[30] = ".data 124,64,346"; // ".string \"abdckjt\"";
+//     char line2[30] = ".string \"abdckjt\"";
+//     res=encodeData(line, data, dc);
 
-    int i;
-    for (i = 0; i < res; i++) printf("iteration number %d - value is %d\n", i, *(data + i));
+//     int i;
+//     for (i = 0; i < res; i++) printf("iteration number %d - value is %d\n", i, *(data + i));
 
-    return 1;
-}
+//     return 1;
+// }

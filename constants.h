@@ -1,16 +1,16 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include "instructions.h"
-
-#define memorySize 8192
-#define memoryPartition 20
+#define MEMORY_SIZE 8192
+#define MEMORY_PARTITION 20
 #define MAX_LINE_SIZE 80
 #define MAX_SYMBOL_NAME_LENGTH 32
 #define TRUE 1
 #define FALSE 0
 #define REGISTERS_AMOUNT 16
 #define COMMANDS_AMOUNT 16
+#define BEGIN_CODE_LOAD 100
+#define MAX_ENCODED_WORDS_PER_COMMAND 6
 
 #define ADDRESS_METHOD_AMOUNT 4
 #define IMMEDIATE_ADDRESING 0x01
@@ -24,40 +24,31 @@
 #define RELOCATABLE_ENCODING_TYPE 0x02
 #define ABSOLUTE_ENCODING_TYPE 0x04
 
+#include <stdlib.h>
 
-typedef struct {
+typedef struct struct_action {
+    char name[10];
+    uint8_t opcode;
+    uint8_t funct;
+    unsigned int sourceAdressingMethods:4;
+    unsigned int targetAdressingMethods:4;
+} CommandNode;
+
+typedef struct address_method_words{
     uint8_t method;
     uint8_t numOfWords;
+    int methodNum;
 } AddressMethodWords;
-
-AddressMethodWords addressMethodsWordsDict[ADDRESS_METHOD_AMOUNT] = {
-    {IMMEDIATE_ADDRESING, 1},
-    {DIRECT_ADDRESING, 2},
-    {INDEX_ADDRESSING, 2},
-    {REGISTER_DIRECT_ADDRESSING, 0}
-};
-
-CommandNode COMMANDS[16] = {
-    {"mov", 0, 0, ALL_ADDRESSING_METHODS, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"cmp", 1, 0, ALL_ADDRESSING_METHODS, ALL_ADDRESSING_METHODS},
-    {"add", 2, 10, ALL_ADDRESSING_METHODS, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"sub", 2, 11, ALL_ADDRESSING_METHODS, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"lea", 4, 0, DIRECT_ADDRESING | INDEX_ADDRESSING, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"clr", 5, 10, 0, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"not", 5, 11, 0, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"inc", 5, 12, 0, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"dec", 5, 13, 0, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"jmp", 9, 10, 0, DIRECT_ADDRESING | INDEX_ADDRESSING},
-    {"bne", 9, 11, 0, DIRECT_ADDRESING | INDEX_ADDRESSING},
-    {"jsr", 9, 12, 0, DIRECT_ADDRESING | INDEX_ADDRESSING},
-    {"red", 12, 0, 0, DIRECT_INDEX_REGISTER_ADDRESSING},
-    {"prn", 13, 0, 0, ALL_ADDRESSING_METHODS},
-    {"rts", 14, 0, 0, 0},
-    {"stop", 15, 0, 0, 0}
-};
 
 typedef enum {
     SOURCE, DESTINATION
 } OperandType;
+
+typedef enum {
+    IMMEDIATE, DIRECT, INDEX, REGISTER_DIRECT
+} AddressingMethods;
+
+extern const AddressMethodWords *wordsPerAddressMethods();
+extern CommandNode *machine_commands();
 
 #endif

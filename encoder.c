@@ -5,9 +5,12 @@
 #include "constants.h"
 #include "assembler.h"
 
-unsigned int generate_are(char are_value)
+int getCommandFunct(char *command);
+getAddressingNum(uint8_t addressingMehtod);
+
+unsigned int generate_a_r_e(char A_R_E_Value)
 {
-    switch (are_value)
+    switch (A_R_E_Value)
     {
     case 'a':
         return 1 << 18;
@@ -16,26 +19,47 @@ unsigned int generate_are(char are_value)
     case 'e':
         return 1 << 16;
     default:
-        printf("Invalid ARE request, allowed values are a / r / e but got %c", are_value);
+        printf("Invalid A/R/E request, allowed values are a / r / e but got %c", A_R_E_Value);
         return 0;
     }
 }
 
 int encodeFirstWord(char *command)
 {
-    unsigned int optcode, are, i;
-    are = generate_are('a');
+    unsigned int optcode, a_r_e, i;
+    CommandNode *commands = machine_commands();
+    a_r_e = generate_a_r_e('a');
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(COMMANDS[i].name, command) == 0)
+        if (strcmp(commands[i].name, command) == 0)
         {
-            printf("opcode is %d\n", COMMANDS[i].opcode);
-            optcode = (1 << COMMANDS[i].opcode);
+            printf("opcode is %d\n", commands[i].opcode);
+            optcode = (1 << commands[i].opcode);
             break;
         }
     }
     
-    return optcode | are;
+    return optcode | a_r_e;
+}
+
+int encodeSecWord(char *command, int sourceRegister, uint8_t sourceAddressingMehtod, int destinationRegister, uint8_t destinationAddressingMehtod)
+{
+    int sourceEncoding = 0, desEncoding = 0;
+    int funct = getCommandFunct(command);
+    int sourceAddressing = getAddressingNum(sourceAddressingMehtod);
+    int destinationAddressing = getAddressingNum(destinationAddressingMehtod);
+
+    funct = funct << 12;
+    sourceAddressing = sourceAddressing << 6;
+    
+    sourceRegister = sourceRegister << 8;
+    destinationRegister = destinationRegister << 2;
+    // if (sourceRegister != -1) sourceEncoding = encodeDirectAdressing(sourceRegister);
+    // if (desRegister != -1) desEncoding = encodeDirectAdressing(desRegister);
+    
+    unsigned a_r_e = generate_a_r_e('a');
+
+    return a_r_e | funct | sourceRegister | sourceAddressing | destinationRegister | destinationAddressing;
 }
 
 int encodeRegisterDirectAdressing(int registerNum, OperandType type)
@@ -48,30 +72,21 @@ int *encodeDirectAdressing(SymbolNode *label)
     int result[2];
     if (strcmp(label->attribute1, "extern") != 0 && strcmp(label->attribute2, "extern") != 0)
     {
-        result[0] = generate_are('r') | (label->value) / 16;
-        result[1] = generate_are('r') | (label->value) % 16;
+        result[0] = generate_a_r_e('r') | (label->value) / 16;
+        result[1] = generate_a_r_e('r') | (label->value) % 16;
     }
     else
     {
-        result[0] = generate_are('e');
-        result[1] = generate_are('e');
+        result[0] = generate_a_r_e('e');
+        result[1] = generate_a_r_e('e');
     }
 
     return result;
 }
 
-int encodeSecWord(int sourceRegister, int desRegister)
-{
-    int sourceEncoding = 0, desEncoding = 0;
-    if (sourceRegister != -1) sourceEncoding = encodeDirectAdressing(sourceRegister);
-    if (desRegister != -1) desEncoding = encodeDirectAdressing(desRegister);
-    
-    return sourceEncoding | desEncoding;
-}
-
 int encodeImmediateAdressing(int operandValue)
 {
-    return generate_are('a') | operandValue;
+    return generate_a_r_e('a') | operandValue;
 }
 
 int main(int argc, char const *argv[])
@@ -80,4 +95,22 @@ int main(int argc, char const *argv[])
     int e = encodeImmediateAdressing(254);
     printf("result is %d", e);
     return 0;
+}
+
+/* return the command funct code */
+int getCommandFunct(char *command)
+{
+    CommandNode *ptr = machine_commands();
+    int i;
+    for (i=0; i < COMMANDS_AMOUNT && strcmp(ptr[i].name, command) != 0; i++) ;
+    return ptr[i].funct;
+}
+
+/* return the decimal number of a given bitfield addressing method */
+getAddressingNum(uint8_t addressingMehtod)
+{
+    const AddressMethodWords *addressingMethods = wordsPerAddressMethods();
+    int i;
+    for (i = 0; i != NULL && addressingMethods[i].method != addressingMehtod != 0; i++) ;
+    return addressingMethods[i].method;
 }

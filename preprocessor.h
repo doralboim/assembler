@@ -1,3 +1,5 @@
+#ifndef PREPROCESSOR_H
+
 char *processFile(char *fileName);
 struct Macro
 {
@@ -11,3 +13,6 @@ typedef struct Macro {
     char *data;
     Macroptr next;
 } MacroNode;
+
+#define PREPROCESSOR_H
+#endif

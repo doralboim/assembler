@@ -2,15 +2,7 @@
 #define ASSEMBLER_H
 
 #include "constants.h"
-
-typedef struct instructionData *InstructionDataPtr;
-
-typedef struct instructionData {
-    int byteCode;
-    int InstructionWords;
-    int IC;
-    InstructionDataPtr *next;
-} InstructionData;
+#include "instructions.h"
 
 typedef enum {
     DATA, ENTRY, EXTERNAL, CODE, EMPY
@@ -27,7 +19,7 @@ typedef struct symbol_node {
 
 typedef struct {
     SymbolNode *symbolTable;
-    int *instructionImage;
+    InstructionData *instructionData;
     int *dataImage;
 } IterationsData;
 

@@ -5,7 +5,6 @@
 
 #include "assembler.h"
 #include "constants.h"
-#include "instructions.h"
 #include "utils.h"
 
 SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute);
@@ -13,17 +12,19 @@ int isLegalSymbol(char *symbol);
 int isCommand(char *symbol);
 
 
-int *insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, SymbolAttribute attribute)
+int insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, SymbolAttribute attribute)
 {
     SymbolNode *ptr, *newSymbol;
     int i;
-    
+    printf("inserting symbol to table\n");
     if (isLegalSymbol(symbolName)) return FALSE;
 
+    printf("after checking if symbol is legal\n");
     newSymbol = createNewSymbol(symbolName, IC, attribute);
     if (tableHead->value == 0)
     {
         tableHead = newSymbol;
+        printf("end of inserting symbol to table - %s\n", symbolName);
         return TRUE;
     }
 
@@ -32,19 +33,23 @@ int *insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, Symbol
     {
         if (strcmp(ptr->symbolName, symbolName) == 0)
         {
-            if (ptr->attribute1 != EXTERNAL && attribute != EXTERNAL)
+            /* make attribute2 to EXTERNAL if it's not already defined */
+            if ((ptr->attribute1 != attribute && attribute != ENTRY &&
+                ptr->attribute1 != ENTRY && ptr-> attribute2 == NULL) ||
+                ptr->attribute1 == attribute && attribute != EXTERNAL && attribute != ENTRY)
             {
-                printf("Symbol %s is already exist in the symbolName table!\n", symbolName);
-                return FALSE;   
+                printf("Symbol %s is illegally defined twice!", symbolName);
+                return FALSE;
             }
 
             if (ptr->attribute2 == NULL) ptr->attribute2 = attribute;
+            break;
         }
         ptr = ptr->next;
     }
 
     ptr->next = newSymbol;
-    
+    printf("end of inserting symbol to table\n");
     return TRUE;
 }
 
@@ -65,18 +70,19 @@ SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute)
 
 int isLegalSymbol(char *symbol)
 {
-    return (isRegister(symbol) || isCommand(symbol));
+    return (isRegister(symbol) != -1 || isCommand(symbol));
 }
 
 
 int isCommand(char *symbol)
 {
     int i;
+    CommandNode *commands = machine_commands();
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(symbol, COMMANDS[i].name) == 0)
+        if (strcmp(symbol, commands[i].name) == 0)
         {
-            printf("symbol %s is an instruction: %s!! \n", symbol, COMMANDS[i]);
+            printf("symbol %s is an instruction: %s!! \n", symbol, commands[i]);
             return TRUE;
         }
     }
