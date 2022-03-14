@@ -84,13 +84,14 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
                 if (!isSymbolInsertedToTable)
                     continue;
             }
-            printf("symbol inserted to table\n");
+
             if (!isValidCommand(action))
             {
                 printf("Invalid action name - got %s\n", action);
                 isError = TRUE;
                 continue;
             }
+
             printf("computing command words\n");
             L = computeCommandWords(line, IC, isSymbol, action, instructionDataHead);
             IC += L;
@@ -100,6 +101,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
                 isError = TRUE;
             }
         }
+        printf("instruction data head: %s\n", instructionDataHead->command);
     }
 
     printf("cheking errors\n");
@@ -109,6 +111,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
         exit(1);
     }
 
+    printf("updating symbols for IC=%d", IC);
     updateDataSymbols(symbolTable, IC);
 
     IterationsData *response = (IterationsData *) malloc(sizeof(IterationsData));
@@ -168,6 +171,7 @@ int computeCommandWords(char line[], int ic, int isSymbol, char command[], Instr
         }
         
         sourceOperand = strtok(line + strlen(command) + 1, ",");
+        printf("source operand is: %s\n", sourceOperand);
         sourceOperandData = analyseOperand(line, command, sourceOperand, SOURCE, &words);
     }
     
@@ -176,6 +180,8 @@ int computeCommandWords(char line[], int ic, int isSymbol, char command[], Instr
 
     /* Zero operands command - if a legal non-operands command returns 1, otherwise return -1 (error) */
     desOperand = commas == 1? strtok(NULL, ",") : strtok(line + strlen(command) + 1, ",");
+    sscanf(desOperand, "%s", desOperand);
+    printf("Destination operand is: %s\n", desOperand);
     if (*desOperand == NULL)
     {
         if (allowedOperands != 0)
@@ -194,12 +200,18 @@ int computeCommandWords(char line[], int ic, int isSymbol, char command[], Instr
     }
 
     /* destination operand operations are identical to 1 and 2 operands' actions */
+    printf("destination operand is %s\n", desOperand);
     operandData *destinationOperandData = analyseOperand(line, command, desOperand, DESTINATION, &words);
+    printf("analysis succeeded\n");
 
-    printf("Source operand: %s %d %d\n", sourceOperandData->label, sourceOperandData->registerNum, sourceOperandData->value);
+    //printf("Source operand: label-%s register-%d value-%d\n", sourceOperandData->label, sourceOperandData->registerNum, sourceOperandData->value);
+    //printf("Destination operand: label-%s register-%d value-%d\n", destinationOperandData->label, destinationOperandData->registerNum, destinationOperandData->value);
 
-    saveInstructionData(command, ic, words, sourceOperandData != NULL? sourceOperand: 0, destinationOperandData, instructionDataHead);
-
+    InstructionData *newHead = (InstructionData *) malloc(sizeof(InstructionData));
+    newHead = saveInstructionData(command, ic, words, sourceOperandData, destinationOperandData, instructionDataHead);
+    *instructionDataHead = *newHead;
+    printf("words number is - %d\n", words);
+    printf("instruction data head: %s\n", instructionDataHead->command);
     return words;
 }
 
@@ -208,9 +220,10 @@ operandData *analyseOperand(char line[], char command[], char *operand, OperandT
 {
     operandData *opData;
     sscanf(operand, "%s", operand);
-    printf("Operand is: %s\n", operand);
+    printf("start analysing operand %s\n", operand);
 
     opData = addressingMethodByOperand(operand);
+    printf("Operand data is: label: %s, register num: %d\n", opData->label, opData->registerNum);
     if (!isAllowedAddressingMethodByCommand(command, opData->addressingMethod, operandType))
     {
         printf("Invalid addressing method for source operand - line %s!", line);
@@ -218,9 +231,7 @@ operandData *analyseOperand(char line[], char command[], char *operand, OperandT
         return opData;
     }
     
-    printf("words before for %s - %d\n", command, *words);
     int wordsByAdressing = getWordsNumByAdressMethod(opData->addressingMethod);
-    printf("words number is: %d\n", wordsByAdressing);
     *words += wordsByAdressing;
     printf("words for %s - %d\n", command, *words);
     return opData;

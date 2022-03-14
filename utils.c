@@ -14,11 +14,11 @@
 /* check if the given command is presented in the machine allowed commands */
 int isValidCommand(char *command)
 {
-    CommandNode *COMMANDS = machine_commands();
+    CommandNode commands[] = COMMANDS;
     int i;
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(command, COMMANDS[i].name)) return TRUE;
+        if (strcmp(command, commands[i].name)) return TRUE;
     }
     return FALSE;
 }
@@ -55,14 +55,14 @@ int isRegister(char *symbol)
 /* return the number of allowed operands for a given command */
 int getNumberOfAllowedOperandsByCommand(char *command)
 {
-    CommandNode *COMMANDS = machine_commands();
+    CommandNode commands[] = COMMANDS;
     int i, allowedSource, allowedDes;
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(command, COMMANDS[i].name) == 0)
+        if (strcmp(command,commands[i].name) == 0)
         {
-            allowedSource = COMMANDS[i].sourceAdressingMethods == 0? 0: 1;
-            allowedDes = COMMANDS[i].targetAdressingMethods == 0? 0: 1;
+            allowedSource =commands[i].sourceAdressingMethods == 0? 0: 1;
+            allowedDes =commands[i].targetAdressingMethods == 0? 0: 1;
             return allowedDes + allowedSource;
         }
     }
@@ -72,7 +72,7 @@ int getNumberOfAllowedOperandsByCommand(char *command)
 /* check if a given addressing method is allowed for the given operand type (source / destination) with a given command */
 int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, OperandType operandType)
 {
-    CommandNode *COMMANDS = machine_commands();
+    CommandNode commands[] = COMMANDS;
     printf("got commands for %s\n", command);
     if (operandType != SOURCE && operandType != DESTINATION)
     {
@@ -82,9 +82,9 @@ int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, Op
     int i = 0;
     for(i = 0 ; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(command, COMMANDS[i].name) == 0)
+        if (strcmp(command, commands[i].name) == 0)
         {
-            uint8_t opType = operandType == SOURCE? COMMANDS[i].sourceAdressingMethods: COMMANDS[i].targetAdressingMethods;
+            uint8_t opType = operandType == SOURCE? commands[i].sourceAdressingMethods: commands[i].targetAdressingMethods;
             if ((addressMethod & opType) > 0)
             {
                 printf("allowed addresing method for %s\n", command);
@@ -102,8 +102,7 @@ int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, Op
 int getWordsNumByAdressMethod(uint8_t addressMethod)
 {
     printf("getting words number for address method\n");
-    const AddressMethodWords *addressMethodWords; 
-    addressMethodWords = wordsPerAddressMethods();
+    const AddressMethodWords addressMethodWords[] = ADDRESSING_METHODS;
     printf("words per address method : %d %d %d\n", addressMethodWords->method, addressMethodWords->numOfWords, addressMethodWords->methodNum);
     int i;
     for (i = 0; i < ADDRESS_METHOD_AMOUNT; i++)
@@ -172,6 +171,7 @@ operandData *addressingMethodByOperand(char operand[])
     if((result = isRegister(operand)) != -1)
     {
         resultData->addressingMethod = REGISTER_DIRECT_ADDRESSING;
+        resultData->registerNum = result;
         printf("register direct addressing\n");
     }
     

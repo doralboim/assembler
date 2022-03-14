@@ -77,7 +77,7 @@ int isLegalSymbol(char *symbol)
 int isCommand(char *symbol)
 {
     int i;
-    CommandNode *commands = machine_commands();
+    CommandNode commands[] = COMMANDS;
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
         if (strcmp(symbol, commands[i].name) == 0)

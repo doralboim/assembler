@@ -27,7 +27,7 @@ unsigned int generate_a_r_e(char A_R_E_Value)
 int encodeFirstWord(char *command)
 {
     unsigned int optcode, a_r_e, i;
-    CommandNode *commands = machine_commands();
+    CommandNode commands[] = COMMANDS;
     a_r_e = generate_a_r_e('a');
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
@@ -100,7 +100,7 @@ int main(int argc, char const *argv[])
 /* return the command funct code */
 int getCommandFunct(char *command)
 {
-    CommandNode *ptr = machine_commands();
+    CommandNode ptr[] = COMMANDS;
     int i;
     for (i=0; i < COMMANDS_AMOUNT && strcmp(ptr[i].name, command) != 0; i++) ;
     return ptr[i].funct;
@@ -109,7 +109,7 @@ int getCommandFunct(char *command)
 /* return the decimal number of a given bitfield addressing method */
 getAddressingNum(uint8_t addressingMehtod)
 {
-    const AddressMethodWords *addressingMethods = wordsPerAddressMethods();
+    const AddressMethodWords addressingMethods[] = ADDRESSING_METHODS;
     int i;
     for (i = 0; i != NULL && addressingMethods[i].method != addressingMehtod != 0; i++) ;
     return addressingMethods[i].method;
