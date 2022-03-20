@@ -89,14 +89,6 @@ int encodeImmediateAdressing(int operandValue)
     return generate_a_r_e('a') | operandValue;
 }
 
-int main(int argc, char const *argv[])
-{
-    char x[12] = "lea";
-    int e = encodeImmediateAdressing(254);
-    printf("result is %d", e);
-    return 0;
-}
-
 /* return the command funct code */
 int getCommandFunct(char *command)
 {
@@ -114,3 +106,11 @@ getAddressingNum(uint8_t addressingMehtod)
     for (i = 0; i != NULL && addressingMethods[i].method != addressingMehtod != 0; i++) ;
     return addressingMethods[i].method;
 }
+
+// int main(int argc, char const *argv[])
+// {
+//     char x[12] = "lea";
+//     int e = encodeImmediateAdressing(254);
+//     printf("result is %d", e);
+//     return 0;
+// }

@@ -24,5 +24,6 @@ typedef struct {
 } IterationsData;
 
 IterationsData *startAssemblerFirstIteration(char *fileName);
+void startSecondIteration(IterationsData *firstIterData);
 
 #endif

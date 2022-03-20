@@ -8,9 +8,11 @@
 #include "constants.h"
 #include "encoder.h"
 
+int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType opType);
+SymbolNode *getLabelNode(SymbolNode *symbolTable, char *label);
 
 /* encoding program instructions from the instructions data object, utilizing the symbol table */
-void encodeAllInstructions(char *fileName, IterationsData *firstIterData)
+void startSecondIteration(IterationsData *firstIterData)
 {
     SymbolNode *symbolTablePtr = firstIterData->symbolTable;
     InstructionData *instructionsPtr = firstIterData->instructionData;
@@ -59,6 +61,7 @@ void encodeAllInstructions(char *fileName, IterationsData *firstIterData)
 /* encode operand according to the operand data retrieved in the first iteration */
 int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType opType)
 {
+    SymbolNode *labelNode;
     switch (operand->addressingMethod)
     {
     case IMMEDIATE_ADDRESING:
@@ -68,7 +71,7 @@ int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType op
     }
 
     case DIRECT_ADDRESING: case INDEX_ADDRESSING:
-        SymbolNode *labelNode = getLabelNode(symbolTable, operand->label);
+        labelNode = getLabelNode(symbolTable, operand->label);
         if (labelNode == NULL)
         {
             printf("Operand has invalid label %s!", operand->label);

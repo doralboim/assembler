@@ -1,18 +1,14 @@
 #ifndef PREPROCESSOR_H
+#define PREPROCESSOR_H
 
 char *processFile(char *fileName);
-struct Macro
+typedef struct macro_node
 {
-    int name;
-    char *data;
-    struct Macro *next;
-};
-typedef struct Macro *Macroptr;
-typedef struct Macro {
-    int name;
-    char *data;
-    Macroptr next;
+    char name[MAX_MACRO_NAME];
+    char **data;
+    int dataLength;
+    int rowsCount;
+    struct macro_node *next;
 } MacroNode;
 
-#define PREPROCESSOR_H
 #endif

@@ -12,44 +12,57 @@ int isLegalSymbol(char *symbol);
 int isCommand(char *symbol);
 
 
-int insertSymbolToTable(SymbolNode *tableHead, char *symbolName, int IC, SymbolAttribute attribute)
+int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *symbolName, int IC, SymbolAttribute attribute)
 {
     SymbolNode *ptr, *newSymbol;
     int i;
     printf("inserting symbol to table\n");
     if (isLegalSymbol(symbolName)) return FALSE;
 
-    printf("after checking if symbol is legal\n");
     newSymbol = createNewSymbol(symbolName, IC, attribute);
-    if (tableHead->value == 0)
+    if (*tableHead == NULL)
     {
-        tableHead = newSymbol;
-        printf("end of inserting symbol to table - %s\n", symbolName);
+        *tableHead = newSymbol;
         return TRUE;
     }
 
-    ptr = tableHead;
-    while (ptr->next != NULL)
+    if (*tableTail == NULL)
     {
-        if (strcmp(ptr->symbolName, symbolName) == 0)
-        {
-            /* make attribute2 to EXTERNAL if it's not already defined */
-            if ((ptr->attribute1 != attribute && attribute != ENTRY &&
-                ptr->attribute1 != ENTRY && ptr-> attribute2 == NULL) ||
-                ptr->attribute1 == attribute && attribute != EXTERNAL && attribute != ENTRY)
-            {
-                printf("Symbol %s is illegally defined twice!", symbolName);
-                return FALSE;
-            }
-
-            if (ptr->attribute2 == NULL) ptr->attribute2 = attribute;
-            break;
-        }
-        ptr = ptr->next;
+        (*tableHead)->next = newSymbol;
+        *tableTail = newSymbol;
+        return TRUE;
     }
 
-    ptr->next = newSymbol;
-    printf("end of inserting symbol to table\n");
+    (*tableTail)->next = newSymbol;
+    *tableTail = newSymbol;
+    // newSymbol->next = *tableHead;
+    // *tableHead = newSymbol;
+    
+    
+    // ptr = *tableHead;
+    // while (ptr->next != NULL)
+    // {
+    //     // printf("current symbol search is: %s\n", ptr->symbolName);
+    //     if (strcmp(ptr->symbolName, symbolName) == 0)
+    //     {
+    //         /* make attribute2 to EXTERNAL if it's not already defined */
+    //         if ((ptr->attribute1 != attribute && attribute != ENTRY &&
+    //             ptr->attribute1 != ENTRY && ptr-> attribute2 == NULL) ||
+    //             ptr->attribute1 == attribute && attribute != EXTERNAL && attribute != ENTRY)
+    //         {
+    //             printf("Symbol %s is illegally defined twice!", symbolName);
+    //             return FALSE;
+    //         }
+
+    //         if (ptr->attribute2 == NULL) ptr->attribute2 = attribute;
+    //         break;
+    //     }
+    //     ptr = ptr->next;
+    // }
+
+    // ptr->next = newSymbol;
+    printf("Inserted %s to the end of the Symbol table\n", newSymbol->symbolName);
+    //printf("before last - %s, last symbol - %s\n", ptr->symbolName, ptr->next->symbolName);
     return TRUE;
 }
 
@@ -58,11 +71,12 @@ SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute)
 {
     SymbolNode *newSymbol;
 
-    newSymbol = (SymbolNode *) calloc(0, sizeof(SymbolNode));
+    newSymbol = (SymbolNode *) malloc(sizeof(SymbolNode));
 
     strcpy(newSymbol->symbolName, symbolName);
     newSymbol->value = IC;
     newSymbol->attribute1 = attribute;
+    newSymbol->next = NULL;
 
     return newSymbol;
 }

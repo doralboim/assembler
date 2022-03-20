@@ -24,6 +24,6 @@ typedef struct instruction_data {
 } InstructionData;
 
 
-InstructionData *saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData *instructionsDataHead);
+void saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData **instructionDataHead);
 
 #endif
