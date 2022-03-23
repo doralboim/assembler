@@ -6,30 +6,39 @@
 
 #include "assembler.h"
 #include "constants.h"
+#include "instructions.h"
 #include "encoder.h"
 
 int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType opType);
 SymbolNode *getLabelNode(SymbolNode *symbolTable, char *label);
 
 /* encoding program instructions from the instructions data object, utilizing the symbol table */
-void startSecondIteration(IterationsData *firstIterData)
+int *startSecondIteration(IterationsData *firstIterData)
 {
-    SymbolNode *symbolTablePtr = firstIterData->symbolTable;
+    printf("\n\nDC = %d  IC = %d\n", firstIterData->DC, firstIterData->IC);
+    printf("started second iteration\n");
+    printf("sec line in sec iter!\n");
+    //SymbolNode firstIterData->symbolTable = firstIterData->symbolTable;
     InstructionData *instructionsPtr = firstIterData->instructionData;
-    int *instructionImage, isError = FALSE;
+    int isError = FALSE;
 
+    int *instructionImage = (int *) malloc(firstIterData->IC - 100 * sizeof(int));
     int firstWordEncoding, secWordEncoding, *sourceOperandEncoding, *destinationOperandEncoding;
     /* track how many words were discarded due to illegal labels and reduce IC accordingly */
     int accumulatedErrors;
 
     while (instructionsPtr != NULL)
     {
+        printf("working on %s - num words: %d\n", instructionsPtr->command, instructionsPtr->words);
         if (instructionsPtr->words >= 5)
         {
-            *sourceOperandEncoding = encodeOperand(instructionsPtr->sourceOperand, symbolTablePtr, SOURCE);
+            printf("5 length words!\n");
+            *sourceOperandEncoding = encodeOperand(instructionsPtr->sourceOperand, firstIterData->symbolTable, SOURCE);
             if (*sourceOperandEncoding == -1)
             {
+                printf("Error encoding source operand for %s\n", instructionsPtr->command);
                 isError = TRUE;
+                instructionsPtr = instructionsPtr->next;
                 continue;
             }
             *(instructionImage + instructionsPtr->IC + 4) = *sourceOperandEncoding;
@@ -38,10 +47,13 @@ void startSecondIteration(IterationsData *firstIterData)
 
         if (instructionsPtr->words >= 3)
         {
-            *destinationOperandEncoding = encodeOperand(instructionsPtr->destinationOperand, symbolTablePtr, DESTINATION);
+            printf("3 length words!\n");
+            *destinationOperandEncoding = encodeOperand(instructionsPtr->destinationOperand, firstIterData->symbolTable, DESTINATION);
             if (*destinationOperandEncoding == -1)
             {
+                printf("Error encoding target operand for %s\n", instructionsPtr->command);
                 isError = TRUE;
+                instructionsPtr = instructionsPtr->next;
                 continue;
             }
             *(instructionImage + instructionsPtr->IC + 2) = *destinationOperandEncoding;
@@ -54,32 +66,39 @@ void startSecondIteration(IterationsData *firstIterData)
                                                                          instructionsPtr->destinationOperand->registerNum,
                                                                          instructionsPtr->destinationOperand->addressingMethod);
         *(instructionImage + instructionsPtr->IC) = encodeFirstWord(instructionsPtr->command);
-        instructionsPtr++;
+        instructionsPtr = instructionsPtr->next;
     }
+
+    printf("\n\nDC = %d  IC = %d\n", firstIterData->DC, firstIterData->IC);
+    return instructionImage;
 }
 
 /* encode operand according to the operand data retrieved in the first iteration */
 int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType opType)
 {
+    printf("encoding operand!!\n");
     SymbolNode *labelNode;
+    int *encoding;
     switch (operand->addressingMethod)
     {
-    case IMMEDIATE_ADDRESING:
-    {
-        int *encoding = encodeImmediateAdressing(operand->value);
-        return encoding;
+        case IMMEDIATE_ADDRESING:
+            printf("immediate addressing!\n");
+            encoding = (int *) malloc(sizeof(int));
+            *encoding = encodeImmediateAdressing(operand->value);
+            return encoding;
+
+        case DIRECT_ADDRESING: case INDEX_ADDRESSING:
+            printf("direct addressing!\n");
+            labelNode = getLabelNode(symbolTable, operand->label);
+            if (labelNode == NULL)
+            {
+                printf("Operand has invalid label %s!", operand->label);
+                return -1;
+            }
+            return encodeDirectAdressing(labelNode);
     }
 
-    case DIRECT_ADDRESING: case INDEX_ADDRESSING:
-        labelNode = getLabelNode(symbolTable, operand->label);
-        if (labelNode == NULL)
-        {
-            printf("Operand has invalid label %s!", operand->label);
-            return -1;
-        }
-        return encodeDirectAdressing(labelNode);
-    }
-
+    printf("finished encoding operand\n");
     return 0;
 }
 
@@ -90,7 +109,8 @@ SymbolNode *getLabelNode(SymbolNode *symbolTable, char *label)
     while (ptr != NULL)
     {
         if (strcmp(ptr->symbolName, label) == 0) return ptr;
-        ptr++;
+        ptr = ptr->next;
     }
     return NULL;
 }
+

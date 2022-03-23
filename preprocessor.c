@@ -100,7 +100,12 @@ void writeMacro(FILE *fp, char *macroName, MacroNode *macrosHead)
     MacroNode *ptr = macrosHead;
     while (strcmp(ptr->name, macroName) != 0) ptr = ptr->next;
     int i;
-    for (i = 0; i < ptr->rowsCount - 1; i++) fputs((ptr->data + i), fp);
+    for (i = 0; i < ptr->rowsCount - 1; i++)
+    {
+        
+        printf("writing: %s\n", (ptr->data + i));
+        fputs((ptr->data + i), fp);
+    }
     printf("Successfully wrote macro %s to file\n", macroName);
 }
 
@@ -109,7 +114,6 @@ void insertMacroEnd(MacroNode **head, MacroNode *newNode)
 {
     MacroNode *ptr = *head;
     while (ptr->next != NULL) ptr = ptr->next;
-    printf("last macro is: %s\n", ptr->name);
     ptr->next = newNode;
 }
 
@@ -117,20 +121,16 @@ void insertMacroEnd(MacroNode **head, MacroNode *newNode)
 int fieldInMacros(char *firstFieldInLine, MacroNode *macroHead)
 {
     MacroNode *ptr = macroHead;
-    printf("checking field in macros!!\n");
     while(ptr != NULL)
     {
         if (strcmp(firstFieldInLine, ptr->name) == 0) return TRUE;
         ptr = ptr->next;
     }
-    
-    printf("field not in macros!\n");
     return FALSE;
 }
 
 int addLineToMacro(char *line, MacroNode **macro)
 {
-    int i;
     printf("starting to add line to %s\n", (*macro)->name);
     if ((*macro)->rowsCount >= (*macro)->dataLength - 1)
     {
@@ -139,6 +139,7 @@ int addLineToMacro(char *line, MacroNode **macro)
         if ((*macro)->data == NULL) return FALSE; /* not enough space for (*macro) */
         (*macro)->dataLength += MACRO_LINE_INCREAMENT_FACTOR;
     }
+    memset(((*macro)->data + (*macro)->rowsCount), '\0', MAX_LINE_SIZE);
     strcpy(((*macro)->data + (*macro)->rowsCount), line);
     ((*macro)->rowsCount)++;
     printf("added %s to %s\n", ((*macro)->data + (*macro)->rowsCount - 1), (*macro)->name);
@@ -147,12 +148,12 @@ int addLineToMacro(char *line, MacroNode **macro)
 
 MacroNode *createMacro(char *macroName)
 {
-    MacroNode *newMacro = (MacroNode *) calloc(0, sizeof(MacroNode));
+    MacroNode *newMacro = (MacroNode *) malloc(sizeof(MacroNode));
     //memset(newMacro->name, '\0', strlen(newMacro->name));
     //newMacro->name = (char *) malloc(sizeof(macroName) * sizeof(char) + 1);
     //*(newMacro->name) = *macroName;
     strcpy(newMacro->name, macroName);
-    newMacro->data = (char *) malloc(MACRO_LINE_INCREAMENT_FACTOR * sizeof(char) * MAX_LINE_SIZE);
+    newMacro->data = (char **) malloc(MACRO_LINE_INCREAMENT_FACTOR * sizeof(char) * MAX_LINE_SIZE);
     newMacro->rowsCount = 0;
     newMacro->dataLength = MACRO_LINE_INCREAMENT_FACTOR;
     newMacro->next = NULL;

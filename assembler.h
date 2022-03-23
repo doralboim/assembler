@@ -21,9 +21,12 @@ typedef struct {
     SymbolNode *symbolTable;
     InstructionData *instructionData;
     int *dataImage;
+    int IC;
+    int DC;
 } IterationsData;
 
 IterationsData *startAssemblerFirstIteration(char *fileName);
-void startSecondIteration(IterationsData *firstIterData);
+int *startSecondIteration(IterationsData *firstIterData);
+void createOutputFiles(char *origFileName, int *binaryInstructions, IterationsData *assemblerIterationsData);
 
 #endif

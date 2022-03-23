@@ -13,6 +13,7 @@ void saveInstructionData(char *command, int ic, int words, operandData *sourceOp
     if (newNode == NULL) printf("Memory cannot be allocated for saving instruction data!");
 
     else {
+        memset(newNode->command, '\0', strlen(command) + 1);
         strcpy(newNode->command, command);
         newNode->IC = ic;
         newNode->words = words;
@@ -22,7 +23,7 @@ void saveInstructionData(char *command, int ic, int words, operandData *sourceOp
         
         newNode->next = NULL;
 
-        if ((*instructionsHead)->IC == NULL)
+        if ((*instructionsHead) == NULL)
         {
             *instructionsHead = newNode;
         }

@@ -17,7 +17,7 @@ void printData(IterationsData *response);
 IterationsData *startAssemblerFirstIteration(char *fileName)
 {
     char line[MAX_LINE_SIZE + 1], firstLineField[MAX_LINE_SIZE], action[MAX_LINE_SIZE], *symbolName;
-    int *instructionImage, *dataImage;
+    int *dataImage;
     int isError = FALSE, isSymbol;
     int IC = 100, DC = 0, encodedData, L;
     int lineArgumentsNum, isSymbolInsertedToTable, countLines = 1;
@@ -27,7 +27,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     dataImage = (int *) malloc(MEMORY_SIZE * sizeof(int));
     SymbolNode *symbolTableHead = NULL;
     SymbolNode *symbolTableTail = NULL;
-    InstructionData *instructionDataHead = (InstructionData *) malloc(sizeof(InstructionData));
+    InstructionData *instructionDataHead = NULL; (InstructionData *) malloc(sizeof(InstructionData));
 
     if ((fp = fopen(fileName, "r")) == NULL)
     {
@@ -67,7 +67,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
         /* if current instruction of type extern inserts it to the symbol table */
         else if (strcmp(action, ".extern") == 0)
         {
-            if (isSymbol) insertSymbolToTable(symbolTableHead, &symbolTableTail, firstLineField, 0, EXTERNAL);
+            if (isSymbol) insertSymbolToTable(&symbolTableHead, &symbolTableTail, firstLineField, 0, EXTERNAL);
             continue;
         }
 
@@ -118,9 +118,13 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     updateDataSymbols(&symbolTableHead, IC);
 
     IterationsData *response = (IterationsData *) malloc(sizeof(IterationsData));
-    response->symbolTable = NULL;
+    response->symbolTable = symbolTableHead;
     response->instructionData = instructionDataHead;
     response->dataImage = dataImage;
+    response->IC = IC - 100;
+    response->DC = DC;
+
+    printf("\n\nDC = %d  IC = %d\n", DC, IC);
     
     // printData(response);
     fclose(fp);
