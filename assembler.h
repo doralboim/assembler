@@ -5,7 +5,7 @@
 #include "instructions.h"
 
 typedef enum {
-    DATA, ENTRY, EXTERNAL, CODE, EMPY
+    EMPTY, DATA, ENTRY, EXTERNAL, CODE
 } SymbolAttribute;
 
 typedef struct symbol_node {

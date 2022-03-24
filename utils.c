@@ -172,6 +172,7 @@ operandData *addressingMethodByOperand(char operand[])
     {
         resultData->addressingMethod = REGISTER_DIRECT_ADDRESSING;
         resultData->registerNum = result;
+        memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
         printf("register direct addressing\n");
     }
     
@@ -188,6 +189,7 @@ operandData *addressingMethodByOperand(char operand[])
     {
         resultData->addressingMethod = IMMEDIATE_ADDRESING;
         resultData->value = value;
+        memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
         printf("immediate addressing\n");
     }
 
@@ -195,15 +197,18 @@ operandData *addressingMethodByOperand(char operand[])
     {   
         resultData->addressingMethod = DIRECT_ADDRESING;
         strcpy(resultData->label, operand);
+        resultData->registerNum = -1;
         printf("direct addressing\n");
     }
 
     return resultData;
 }
 
-// int main(int argc, char const *argv[])
-// {
-//     operandData *test = addressingMethodByOperand("#5479");
-//     printf("%d %s %d %d\n", test->addressingMethod, test->label, test->registerNum, test->value);
-//     return 0;
-// }
+/* Add extension to a given file name and return the result */
+char *addExetensionToFile(char *fileName, char *extension)
+{
+    char *newFileName = (char *) malloc(sizeof(strlen(fileName) + strlen(extension)));
+    strcpy(newFileName, fileName);
+    strcat(newFileName, extension);
+    return newFileName;
+}

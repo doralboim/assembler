@@ -9,6 +9,9 @@
 #include "utils.h"
 #include "instructions.h"
 
+#define IsActionExtern (strcmp(action, ".extern") == 0)
+#define IsActionEntry (strcmp(action, ".entry") == 0)
+
 int computeCommandWords(char line[], int ic, int isSymbol, char command[], InstructionData **instructionDataHead);
 void *updateDataSymbols(SymbolNode **symbolTable, int finalIC);
 operandData *analyseOperand(char line[], char command[], char *operand, OperandType operandType, int *words);
@@ -19,25 +22,27 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     char line[MAX_LINE_SIZE + 1], firstLineField[MAX_LINE_SIZE], action[MAX_LINE_SIZE], *symbolName;
     int *dataImage;
     int isError = FALSE, isSymbol;
-    int IC = 100, DC = 0, encodedData, L;
+    int IC = 0, DC = 0, encodedData, L;
     int lineArgumentsNum, isSymbolInsertedToTable, countLines = 1;
     
     FILE *fp;
 
+    symbolName = (char *) malloc(MAX_SYMBOL_NAME_LENGTH);
     dataImage = (int *) malloc(MEMORY_SIZE * sizeof(int));
     SymbolNode *symbolTableHead = NULL;
     SymbolNode *symbolTableTail = NULL;
-    InstructionData *instructionDataHead = NULL; (InstructionData *) malloc(sizeof(InstructionData));
+    InstructionData *instructionDataHead = NULL; // (InstructionData *) malloc(sizeof(InstructionData));
 
     if ((fp = fopen(fileName, "r")) == NULL)
     {
-        printf("File %s does not exist! check your input!", fileName);
+        printf("Could not open file %s!", fileName);
         exit(0);
     }
 
     while(fgets(line, MAX_LINE_SIZE + 1, fp) != NULL)
     {
         printf("\n\n\n%d - %s\n", countLines++, line);
+        memset(firstLineField, '\0', MAX_LINE_SIZE);
         lineArgumentsNum = sscanf(line, "%s", firstLineField);
 
         isSymbol = FALSE;
@@ -65,18 +70,20 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
             DC = encodeData(line, dataImage, DC);
         }
         /* if current instruction of type extern inserts it to the symbol table */
-        else if (strcmp(action, ".extern") == 0)
+        else if (IsActionExtern || IsActionEntry)
         {
-            if (isSymbol) insertSymbolToTable(&symbolTableHead, &symbolTableTail, firstLineField, 0, EXTERNAL);
+            
+            sscanf(line, "%s%s", firstLineField, symbolName);
+            insertSymbolToTable(&symbolTableHead, &symbolTableTail, symbolName, 0, IsActionExtern ? EXTERNAL: ENTRY);
             continue;
         }
 
-        /* if current instruction of type entry it would be handled in the second iteration */
-        else if (strcmp(action, ".entry") == 0)
-        {
-            if (isSymbol) printf("Need to insert symbol to table\n");
-            else continue;
-        }
+        // /* if current instruction of type entry it would be handled in the second iteration */
+        // else if (strcmp(action, ".entry") == 0)
+        // {
+        //     if (isSymbol) printf("Need to insert symbol to table\n");
+        //     else continue;
+        // }
 
         /* line is a command */
         else
@@ -121,7 +128,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     response->symbolTable = symbolTableHead;
     response->instructionData = instructionDataHead;
     response->dataImage = dataImage;
-    response->IC = IC - 100;
+    response->IC = IC;
     response->DC = DC;
 
     printf("\n\nDC = %d  IC = %d\n", DC, IC);
@@ -252,16 +259,3 @@ void *updateDataSymbols(SymbolNode **symbolTable, int finalIC)
     }
 }
 
-// int main(int argc, char const *argv[])
-// {
-//     IterationsData *data;// = (IterationsData *) malloc(sizeof(IterationsData));
-//     printf("%s\n", argv[1]);
-//     printf("%s\n", argv[1]);
-//     data = startAssemblerFirstIteration(argv[1]);
-//     // while (--argc > 0)
-//     // {
-//     //     printf("%s\n", *++argv);
-//     //     data = startAssemblerFirstIteration(argv[1]);
-//     // }
-//     return 0;
-// }

@@ -19,5 +19,6 @@ int getWordsNumByAdressMethod(uint8_t addressMethod);
 int getNumberOfCommas(char *line);
 int isDirectAdressing(char operand[]);
 operandData *addressingMethodByOperand(char operand[]);                         
+char *addExetensionToFile(char *fileName, char *extension);
 
 #endif

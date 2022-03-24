@@ -1,11 +1,13 @@
 #ifndef PREPROCESSOR_H
 #define PREPROCESSOR_H
 
+#include "constants.h"
+
 char *processFile(char *fileName);
 typedef struct macro_node
 {
     char name[MAX_MACRO_NAME];
-    char **data;
+    char *data;
     int dataLength;
     int rowsCount;
     struct macro_node *next;

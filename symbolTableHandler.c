@@ -26,43 +26,36 @@ int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *sy
         return TRUE;
     }
 
-    if (*tableTail == NULL)
-    {
-        (*tableHead)->next = newSymbol;
-        *tableTail = newSymbol;
-        return TRUE;
-    }
-
-    (*tableTail)->next = newSymbol;
-    *tableTail = newSymbol;
-    // newSymbol->next = *tableHead;
-    // *tableHead = newSymbol;
-    
-    
-    // ptr = *tableHead;
-    // while (ptr->next != NULL)
+    // if (*tableHead == NULL)
     // {
-    //     // printf("current symbol search is: %s\n", ptr->symbolName);
-    //     if (strcmp(ptr->symbolName, symbolName) == 0)
-    //     {
-    //         /* make attribute2 to EXTERNAL if it's not already defined */
-    //         if ((ptr->attribute1 != attribute && attribute != ENTRY &&
-    //             ptr->attribute1 != ENTRY && ptr-> attribute2 == NULL) ||
-    //             ptr->attribute1 == attribute && attribute != EXTERNAL && attribute != ENTRY)
-    //         {
-    //             printf("Symbol %s is illegally defined twice!", symbolName);
-    //             return FALSE;
-    //         }
-
-    //         if (ptr->attribute2 == NULL) ptr->attribute2 = attribute;
-    //         break;
-    //     }
-    //     ptr = ptr->next;
+    //     *tableHead = newSymbol;
+    //     // *tableTail = newSymbol;
+    //     return TRUE;
     // }
 
-    // ptr->next = newSymbol;
-    printf("Inserted %s to the end of the Symbol table\n", newSymbol->symbolName);
-    //printf("before last - %s, last symbol - %s\n", ptr->symbolName, ptr->next->symbolName);
+    // (*tableTail)->next = newSymbol;
+    // *tableTail = newSymbol;
+    
+    
+    ptr = *tableHead;
+    while (ptr->next != NULL)
+    {
+        if (strcmp(ptr->symbolName, symbolName) == 0)
+        {
+            if (ptr->attribute1 != EMPTY && attribute != ENTRY)
+            {
+                fprintf(stderr, "Symbol %s illegally defined twice!", symbolName);
+                return FALSE;
+            }
+            if (ptr->attribute1 == EMPTY && attribute == ENTRY) ptr->attribute2 = ENTRY;
+            else ptr->attribute1 = attribute;
+            break;
+        }
+        
+        ptr = ptr->next;
+    }
+
+    ptr->next = newSymbol;
     return TRUE;
 }
 
@@ -75,7 +68,17 @@ SymbolNode *createNewSymbol(char *symbolName, int IC, SymbolAttribute attribute)
 
     strcpy(newSymbol->symbolName, symbolName);
     newSymbol->value = IC;
-    newSymbol->attribute1 = attribute;
+    if (attribute == ENTRY)
+    {
+        newSymbol->attribute1 = EMPTY;
+        newSymbol->attribute2 = attribute;
+    }
+    else
+    {
+        newSymbol->attribute1 = attribute;
+        newSymbol->attribute2 = EMPTY;
+    }
+
     newSymbol->next = NULL;
 
     return newSymbol;
