@@ -12,11 +12,11 @@ int isLegalSymbol(char *symbol);
 int isCommand(char *symbol);
 
 
-int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *symbolName, int IC, SymbolAttribute attribute)
+int insertSymbolToTable(SymbolNode **tableHead, char *symbolName, int IC, SymbolAttribute attribute)
 {
     SymbolNode *ptr, *newSymbol;
-    int i;
-    printf("inserting symbol to table\n");
+    int isInTable = FALSE;
+    
     if (isLegalSymbol(symbolName)) return FALSE;
 
     newSymbol = createNewSymbol(symbolName, IC, attribute);
@@ -25,20 +25,9 @@ int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *sy
         *tableHead = newSymbol;
         return TRUE;
     }
-
-    // if (*tableHead == NULL)
-    // {
-    //     *tableHead = newSymbol;
-    //     // *tableTail = newSymbol;
-    //     return TRUE;
-    // }
-
-    // (*tableTail)->next = newSymbol;
-    // *tableTail = newSymbol;
-    
     
     ptr = *tableHead;
-    while (ptr->next != NULL)
+    while (ptr != NULL)
     {
         if (strcmp(ptr->symbolName, symbolName) == 0)
         {
@@ -47,15 +36,22 @@ int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *sy
                 fprintf(stderr, "Symbol %s illegally defined twice!", symbolName);
                 return FALSE;
             }
-            if (ptr->attribute1 == EMPTY && attribute == ENTRY) ptr->attribute2 = ENTRY;
-            else ptr->attribute1 = attribute;
+            if (attribute == ENTRY) ptr->attribute2 = ENTRY;
+            else
+            {
+                ptr->attribute1 = attribute;
+                ptr->value = IC;
+            }
+
+            isInTable = TRUE;
             break;
         }
         
+        if (ptr->next == NULL) break; /* eliminate exiting the list while looping over all symbols */
         ptr = ptr->next;
     }
 
-    ptr->next = newSymbol;
+    if (!isInTable) ptr->next = newSymbol;
     return TRUE;
 }
 
@@ -97,11 +93,7 @@ int isCommand(char *symbol)
     CommandNode commands[] = COMMANDS;
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
-        if (strcmp(symbol, commands[i].name) == 0)
-        {
-            printf("symbol %s is an instruction: %s!! \n", symbol, commands[i]);
-            return TRUE;
-        }
+        if (strcmp(symbol, commands[i].name) == 0) return TRUE;
     }
     return FALSE;
 }

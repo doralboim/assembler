@@ -8,7 +8,7 @@
 #include "preprocessor.h"
 #include "utils.h"
 
-# define PROCESSED_FILE_NAME (cwd != NULL ? processedFileAbsPath : processedFileName)
+// # define PROCESSED_FILE_NAME (cwd != NULL ? processedFileAbsPath : processedFileName)
 
 void writeMacro(FILE *fp, char *macroName, MacroNode *macrosHead);
 int fieldInMacros(char *firstFieldInLine, MacroNode *macroHead);
@@ -36,10 +36,8 @@ char *processFile(char *fileName)
 
     char *origFileName = addExetensionToFile(fileName, ".as");
 
-    printf("processed file name is: %s\n", processedFileName);
-
     if (((originalFp = fopen(origFileName, "r")) == NULL) ||
-        ((processedFp = fopen(PROCESSED_FILE_NAME, "w")) == NULL))
+        ((processedFp = fopen(&cwd[0] != NULL ? processedFileAbsPath : processedFileName, "w")) == NULL))
     {
         printf("could not open files to preprocess!!\n");
         exit(1);
@@ -52,7 +50,7 @@ char *processFile(char *fileName)
             sscanf(line, "%s", firstFieldInLine);
 
             /* reference to macro, insert macro data to the processed file */
-            if ((macroData = macroHead == NULL? NULL : fieldInMacros(firstFieldInLine, macroHead)) != NULL)
+            if ((macroData = fieldInMacros(firstFieldInLine, macroHead)) != 0)
             {
                 writeMacro(processedFp, firstFieldInLine, macroHead);
             }
@@ -90,7 +88,7 @@ char *processFile(char *fileName)
         fclose(processedFp);
     }
     
-    return PROCESSED_FILE_NAME;
+    return &cwd[0] != NULL ? processedFileAbsPath : processedFileName;
 }
 
 /* writing the given macro content to the file */

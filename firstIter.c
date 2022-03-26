@@ -13,7 +13,7 @@
 #define IsActionEntry (strcmp(action, ".entry") == 0)
 
 int computeCommandWords(char line[], int ic, int isSymbol, char command[], InstructionData **instructionDataHead);
-void *updateDataSymbols(SymbolNode **symbolTable, int finalIC);
+void updateDataSymbols(SymbolNode **symbolTable, int finalIC);
 operandData *analyseOperand(char line[], char command[], char *operand, OperandType operandType, int *words);
 void printData(IterationsData *response);
 
@@ -22,20 +22,22 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     char line[MAX_LINE_SIZE + 1], firstLineField[MAX_LINE_SIZE], action[MAX_LINE_SIZE], *symbolName;
     int *dataImage;
     int isError = FALSE, isSymbol;
-    int IC = 0, DC = 0, encodedData, L;
+    int IC = 0, DC = 0, L;
     int lineArgumentsNum, isSymbolInsertedToTable, countLines = 1;
     
     FILE *fp;
+    SymbolNode *symbolTableHead;
+    InstructionData *instructionDataHead;
+    IterationsData *response;
 
     symbolName = (char *) malloc(MAX_SYMBOL_NAME_LENGTH);
     dataImage = (int *) malloc(MEMORY_SIZE * sizeof(int));
-    SymbolNode *symbolTableHead = NULL;
-    SymbolNode *symbolTableTail = NULL;
-    InstructionData *instructionDataHead = NULL; // (InstructionData *) malloc(sizeof(InstructionData));
+    symbolTableHead = NULL;
+    instructionDataHead = NULL;
 
     if ((fp = fopen(fileName, "r")) == NULL)
     {
-        printf("Could not open file %s!", fileName);
+        fprintf(stderr, "Could not open file %s!", fileName);
         exit(0);
     }
 
@@ -55,37 +57,28 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
         {
             memset(symbolName, '\0', strlen(firstLineField));
             strncpy(symbolName, firstLineField, strlen(firstLineField) - 1);
-            printf("symbol name is : %s\n", symbolName);
             isSymbol = TRUE;
             lineArgumentsNum = sscanf(line, "%s%s", firstLineField, action);
         }
         /* no symbolName - instruction / command is the first field */
         else strcpy(action, firstLineField);
-        printf("action is: %s\n", action);
 
-        /* is current instruction for data storage */
+        /* Current instruction is for data / string storage */
         if (strcmp(action, ".data") == 0|| strcmp(action, ".string") == 0)
         {
-            if (isSymbol) insertSymbolToTable(&symbolTableHead, &symbolTableTail, symbolName, DC, DATA);
+            if (isSymbol) insertSymbolToTable(&symbolTableHead, symbolName, DC, DATA);
             DC = encodeData(line, dataImage, DC);
         }
-        /* if current instruction of type extern inserts it to the symbol table */
+        /* if current instruction of type extern or entry inserts it to the symbol table */
         else if (IsActionExtern || IsActionEntry)
         {
             
             sscanf(line, "%s%s", firstLineField, symbolName);
-            insertSymbolToTable(&symbolTableHead, &symbolTableTail, symbolName, 0, IsActionExtern ? EXTERNAL: ENTRY);
+            insertSymbolToTable(&symbolTableHead, symbolName, 0, IsActionExtern ? EXTERNAL: ENTRY);
             continue;
         }
 
-        // /* if current instruction of type entry it would be handled in the second iteration */
-        // else if (strcmp(action, ".entry") == 0)
-        // {
-        //     if (isSymbol) printf("Need to insert symbol to table\n");
-        //     else continue;
-        // }
-
-        /* line is a command */
+        /* Current is a command line */
         else
         {
             if (!isValidCommand(action))
@@ -97,8 +90,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
             
             if (isSymbol)
             {
-                isSymbolInsertedToTable = insertSymbolToTable(&symbolTableHead, &symbolTableTail, symbolName, IC, CODE);
-                printf("insert command to symbol table result : %d\n", isSymbolInsertedToTable);
+                isSymbolInsertedToTable = insertSymbolToTable(&symbolTableHead, symbolName, IC, CODE);
                 if (!isSymbolInsertedToTable)
                 {
                     isError = TRUE;
@@ -108,32 +100,34 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
 
             L = computeCommandWords(line, IC, isSymbol, action, &instructionDataHead);
             IC += L;
-            // if (IC > MEMORY_SIZE)
-            // {
-            //     printf("Memory exeeds available memory!");
-            //     isError = TRUE;
-            // }
+            
+            /* verify that IC does not exceed the memory size  */
+            if (IC > MEMORY_SIZE)
+            {
+                fprintf(stderr, "Memory exeeds available memory!");
+                isError = TRUE;
+            }
         }
     }
 
     if (isError == TRUE)
     {
-        printf("Errors occured in the first assembler iteration, program stops!");
+        fprintf(stderr, "Errors occured in the first assembler iteration, program stops!");
         exit(1);
     }
 
+    /* Reallocating data to follow code instructions */
     updateDataSymbols(&symbolTableHead, IC);
 
-    IterationsData *response = (IterationsData *) malloc(sizeof(IterationsData));
+    response = (IterationsData *) malloc(sizeof(IterationsData));
+
     response->symbolTable = symbolTableHead;
     response->instructionData = instructionDataHead;
     response->dataImage = dataImage;
     response->IC = IC;
     response->DC = DC;
-
-    printf("\n\nDC = %d  IC = %d\n", DC, IC);
     
-    // printData(response);
+    printData(response);
     fclose(fp);
     return response;
 
@@ -144,7 +138,7 @@ void printData(IterationsData *response)
     SymbolNode *symPtr = response->symbolTable;
     InstructionData *insPtr = response->instructionData;
     int i;
-    for (i=0; i < 10; i++) printf("data image on place %d is: %d\n", i, (response->dataImage)[i]);
+    for (i=0; i < response->DC; i++) printf("data image on place %d is: %d\n", i, (response->dataImage)[i]);
 
     while (symPtr != NULL)
     {
@@ -154,55 +148,64 @@ void printData(IterationsData *response)
 
     while (insPtr != NULL)
     {
-        printf("instructions: %s %d %d %s %s\n", insPtr->command, insPtr->IC, insPtr->words, insPtr->sourceOperand->label, insPtr->destinationOperand->label);
+        printf("instructions: %s %d %d\n", insPtr->command, insPtr->IC, insPtr->words);
         insPtr = insPtr->next;
     }
 }
 
+/* The core function of the first iteration, which analyses the given line, parses the operands and compute the machine words */
 int computeCommandWords(char line[], int ic, int isSymbol, char command[], InstructionData **instructionDataHead)
 {
-    /* stop & rts get no operands */
-    if (strcmp(command, "rts") == 0 || strcmp(command, "stop") == 0) return 1;
     
-    char *lineWithoutSymbol = strstr(line, command);
-    int words = 2, commas, allowedOperands;
+    int words, commas, allowedOperands;
+    char *lineWithoutSymbol, *sourceOperand, *desOperand;
+    
+    operandData *sourceOperandData, *destinationOperandData;
+
+    /* stop & rts get no operands */
+    if (strcmp(command, "rts") == 0 || strcmp(command, "stop") == 0)
+    {
+        saveInstructionData(command, ic, 1, NULL, NULL, instructionDataHead);
+        return 1;
+    }
+    
+    lineWithoutSymbol = strstr(line, command);
     commas = getNumberOfCommas(lineWithoutSymbol);
+    words = 2;
     
     /* more than 1 comma means more than 2 operands which is iillegal */
     if (commas > 1)
     {
-        printf("Illegal number of operands, expected max of 2 and got %d\n", commas - 1);
+        fprintf(stderr, "Illegal number of operands, expected max of 2 and got %d\n", commas - 1);
         return -1;
     }
 
-    /* 2 operands - checking the source operand and adding its words is required */
+    /* obtain the allowed words of the given command and utilizes it for validation along the function */
     allowedOperands = getNumberOfAllowedOperandsByCommand(command);
-    char *sourceOperand;
-    operandData *sourceOperandData = NULL;
+    sourceOperandData = NULL;
+
+    /* 1 comma = 2 operands are introduced */
     if (commas == 1)
     {
         if (allowedOperands != 2)
         {
-            printf("Command %s must get %d operands but got 2 for lineWithoutSymbol:\n%s\n!!", command, allowedOperands, lineWithoutSymbol);
+            fprintf(stderr, "Command %s must get %d operands but got 2 for lineWithoutSymbol:\n%s\n!!", command, allowedOperands, lineWithoutSymbol);
+            return -1;            
         }
         
         sourceOperand = strtok(lineWithoutSymbol + strlen(command) + 1, ",");
-        printf("source operand is: %s\n", sourceOperand);
         sourceOperandData = analyseOperand(lineWithoutSymbol, command, sourceOperand, SOURCE, &words);
     }
-    
-    char *desOperand;
-    uint8_t desAddressMethod;
 
-    /* Zero operands command - if a legal non-operands command returns 1, otherwise return -1 (error) */
+    /* Obtain the destination operand according to the existence of a source operand */
     desOperand = commas == 1? strtok(NULL, ",") : strtok(lineWithoutSymbol + strlen(command) + 1, ",");
     sscanf(desOperand, "%s", desOperand);
-    printf("Destination operand is: %s\n", desOperand);
-    if (*desOperand == NULL)
+
+    if (desOperand == NULL)
     {
         if (allowedOperands != 0)
         {
-            printf("Command %s must get %d operands but got 0 for lineWithoutSymbol:\n%s!!\n", command, allowedOperands, lineWithoutSymbol);
+            fprintf(stderr, "Command %s must get %d operands but got 0 for lineWithoutSymbol:\n%s!!\n", command, allowedOperands, lineWithoutSymbol);
             return -1;
         }
         return 1;
@@ -211,16 +214,12 @@ int computeCommandWords(char line[], int ic, int isSymbol, char command[], Instr
     /* check if actions is allowed with 1 operand */
     if (commas == 0 && allowedOperands != 1)
     {
-        printf("Command %s must get %d operands but got 1 for lineWithoutSymbol:\n%s!!\n", command, allowedOperands, lineWithoutSymbol);
+        fprintf(stderr, "Command %s must get %d operands but got 1 for lineWithoutSymbol:\n%s!!\n", command, allowedOperands, lineWithoutSymbol);
         return -1;
     }
 
-    /* destination operand operations are identical to 1 and 2 operands' actions */
-    printf("destination operand is %s\n", desOperand);
-    operandData *destinationOperandData = analyseOperand(lineWithoutSymbol, command, desOperand, DESTINATION, &words);
-    printf("analysis succeeded\n");
-
-    //InstructionData *newHead = (InstructionData *) malloc(sizeof(InstructionData));
+    destinationOperandData = analyseOperand(lineWithoutSymbol, command, desOperand, DESTINATION, &words);
+    if (destinationOperandData == NULL) return -1;
     saveInstructionData(command, ic, words, sourceOperandData, destinationOperandData, instructionDataHead);
 
     return words;
@@ -229,27 +228,27 @@ int computeCommandWords(char line[], int ic, int isSymbol, char command[], Instr
 /* return the operand data - register / value / label and increase the words count accordingly */
 operandData *analyseOperand(char line[], char command[], char *operand, OperandType operandType, int *words)
 {
+    int wordsByAdressing;
     operandData *opData;
+    
     sscanf(operand, "%s", operand);
-    printf("start analysing operand %s\n", operand);
 
     opData = addressingMethodByOperand(operand);
-    printf("Operand data is: label: %s, register num: %d\n", opData->label, opData->registerNum);
     if (!isAllowedAddressingMethodByCommand(command, opData->addressingMethod, operandType))
     {
-        printf("Invalid addressing method for source operand - line %s!", line);
+        fprintf(stderr, "Invalid addressing method for source operand on line: %s!", line);
         opData->addressingMethod = 0;
-        return opData;
+        return NULL;
     }
     
-    int wordsByAdressing = getWordsNumByAdressMethod(opData->addressingMethod);
+    wordsByAdressing = getWordsNumByAdressMethod(opData->addressingMethod);
     *words += wordsByAdressing;
-    printf("words for %s - %d\n", command, *words);
+    opData->numOfWords = wordsByAdressing;
     return opData;
 }
 
 /* update data symbols by adding IC + 100 to every address */
-void *updateDataSymbols(SymbolNode **symbolTable, int finalIC)
+void updateDataSymbols(SymbolNode **symbolTable, int finalIC)
 {
     SymbolNode *ptr = *symbolTable;
     while (ptr != NULL)
@@ -258,4 +257,3 @@ void *updateDataSymbols(SymbolNode **symbolTable, int finalIC)
         ptr = ptr->next;
     }
 }
-

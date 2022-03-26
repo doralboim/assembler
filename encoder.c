@@ -6,7 +6,7 @@
 #include "assembler.h"
 
 int getCommandFunct(char *command);
-getAddressingNum(uint8_t addressingMehtod);
+int getAddressingNum(uint8_t addressingMehtod);
 int registerByOperand(operandData *operand);
 
 unsigned int generate_a_r_e(char A_R_E_Value)
@@ -20,7 +20,6 @@ unsigned int generate_a_r_e(char A_R_E_Value)
     case 'e':
         return 1 << 16;
     default:
-        printf("Invalid A/R/E request, allowed values are a / r / e but got %c", A_R_E_Value);
         return 0;
     }
 }
@@ -35,7 +34,6 @@ int encodeFirstWord(char *command)
     {
         if (strcmp(commands[i].name, command) == 0)
         {
-            printf("opcode is %d\n", commands[i].opcode);
             optcode = (1 << commands[i].opcode);
             break;
         }
@@ -47,13 +45,11 @@ int encodeFirstWord(char *command)
 
 int encodeSecWord(char *command, operandData *sourceOperand, operandData *destinationOperand)
 {
-    printf("start encoding second word for %s\n", command);
     int sourceEncoding = 0, desEncoding = 0;
     int funct = getCommandFunct(command);
     int sourceAddressing = sourceOperand != NULL? getAddressingNum(sourceOperand->addressingMethod) : 0;
     int destinationAddressing = getAddressingNum(destinationOperand->addressingMethod);
 
-    printf("got registers\n");
     funct = funct << 12;
     sourceAddressing = sourceAddressing << 6;
     
@@ -65,7 +61,6 @@ int encodeSecWord(char *command, operandData *sourceOperand, operandData *destin
     // if (desRegister != -1) desEncoding = encodeDirectAdressing(desRegister);
     
     unsigned a_r_e = generate_a_r_e('a');
-    printf("returning second word\n");
     return a_r_e | funct | sourceRegister | sourceAddressing | destinationRegister | destinationAddressing;
 }
 
@@ -78,33 +73,28 @@ int encodeRegisterDirectAdressing(int registerNum, OperandType type)
 
 int registerByOperand(operandData *operand)
 {
-    printf("getting register by operand\n");
     if (operand->addressingMethod == IMMEDIATE_ADDRESING || operand->registerNum == -1) return 0;
     return operand->registerNum;
 }
 
 
+/* Encode according to the label value (base + offset) */
 int *encodeDirectAdressing(SymbolNode *label)
 {
-    printf("encoding direct addressing for %s!\n", label);
     int *result = (int *) malloc(2 * sizeof(int));
     
     if (label->attribute1 != EXTERNAL)
     {
-        printf("label is not external\n");
         *result = generate_a_r_e('r') | (label->value) / 16;
         *(result + 1) = generate_a_r_e('r') | (label->value) % 16;
-        printf("result is defined\n");
     }
     
     else
     {
-        printf("label is external\n");
         *result = generate_a_r_e('e');
         *(result + 1) = generate_a_r_e('e');
     }
 
-    printf("returning result!\n");
     return result;
 }
 
@@ -123,10 +113,10 @@ int getCommandFunct(char *command)
 }
 
 /* return the decimal number of a given bitfield addressing method */
-getAddressingNum(uint8_t addressingMehtod)
+int getAddressingNum(uint8_t addressingMehtod)
 {
     const AddressMethodWords addressingMethods[] = ADDRESSING_METHODS;
     int i;
-    for (i = 0; i != NULL && addressingMethods[i].method != addressingMehtod != 0; i++) ;
+    for (i = 0; i < ADDRESS_METHOD_AMOUNT && addressingMethods[i].method != addressingMehtod != 0; i++) ;
     return addressingMethods[i].method;
 }

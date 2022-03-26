@@ -30,7 +30,7 @@ void saveInstructionData(char *command, int ic, int words, operandData *sourceOp
         else
         {
             InstructionData *ptr = *instructionsHead;
-            while (ptr->next != NULL) ptr++;
+            while (ptr->next != NULL) ptr = ptr->next;
             ptr->next = newNode;
         }
     }

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <ctype.h>
 
-
 #include "assembler.h"
 #include "constants.h"
 #include "instructions.h"
@@ -15,62 +14,40 @@ SymbolNode *getLabelNode(SymbolNode *symbolTable, char *label);
 /* encoding program instructions from the instructions data object, utilizing the symbol table */
 int *startSecondIteration(IterationsData *firstIterData)
 {
-    printf("\n\nDC = %d  IC = %d\n", firstIterData->DC, firstIterData->IC);
-    printf("started second iteration\n");
-    printf("sec line in sec iter!\n");
-    //SymbolNode firstIterData->symbolTable = firstIterData->symbolTable;
     InstructionData *instructionsPtr = firstIterData->instructionData;
-    int isError = FALSE;
+    short isError = FALSE, countEncoded;
 
     int *instructionImage = (int *) malloc((firstIterData->IC) * sizeof(int));
     int firstWordEncoding, secWordEncoding, *sourceOperandEncoding, *destinationOperandEncoding;
-    /* track how many words were discarded due to illegal labels and reduce IC accordingly */
-    int accumulatedErrors;
 
     while (instructionsPtr != NULL)
     {
         printf("working on %s - num words: %d IC = %d\n", instructionsPtr->command, instructionsPtr->words, instructionsPtr->IC);
-        if (instructionsPtr->words >= 5)
-        {
-            printf("5 length words!\n");
-            sourceOperandEncoding = encodeOperand(instructionsPtr->sourceOperand, firstIterData->symbolTable, SOURCE);
-            if (*sourceOperandEncoding == -1)
-            {
-                printf("Error encoding source operand for %s\n", instructionsPtr->command);
-                isError = TRUE;
-                instructionsPtr = instructionsPtr->next;
-                continue;
-            }
-            *(instructionImage + instructionsPtr->IC + 4) = *sourceOperandEncoding;
-            if (instructionsPtr->words == 6) *(instructionImage + instructionsPtr->IC + 5) = sourceOperandEncoding[1];
-        }
 
-        if (instructionsPtr->words >= 3)
-        {
-            printf("3 length words!\n");
-            destinationOperandEncoding = encodeOperand(instructionsPtr->destinationOperand, firstIterData->symbolTable, DESTINATION);
-            printf("encoded destination operand\n");
-            /* // if (*destinationOperandEncoding == -1)
-            // {
-            //     printf("Error encoding target operand for %s\n", instructionsPtr->command);
-            //     isError = TRUE;
-            //     instructionsPtr = instructionsPtr->next;
-            //     continue;
-            // } */
-            
-            *(instructionImage + instructionsPtr->IC + 2) = *destinationOperandEncoding;
-            
-            if (instructionsPtr->words == 4) *(instructionImage + instructionsPtr->IC + 3) = destinationOperandEncoding[1];
-            
-        }
-
+        *(instructionImage + instructionsPtr->IC) = encodeFirstWord(instructionsPtr->command);
+        countEncoded = 1;
         if (instructionsPtr->words >= 2)
         {
-            printf("encoding second word!\n");
             *(instructionImage + instructionsPtr->IC + 1) = encodeSecWord(instructionsPtr->command, instructionsPtr->sourceOperand, instructionsPtr->destinationOperand);
+            countEncoded++;            
+        
+            sourceOperandEncoding = instructionsPtr->sourceOperand != NULL && instructionsPtr->sourceOperand->numOfWords > 0 ? \
+                                    encodeOperand(instructionsPtr->sourceOperand, firstIterData->symbolTable, SOURCE) : NULL;
+            destinationOperandEncoding = instructionsPtr->destinationOperand != NULL && instructionsPtr->destinationOperand->numOfWords > 0 ? \
+                                         encodeOperand(instructionsPtr->destinationOperand, firstIterData->symbolTable, DESTINATION) : NULL;
+
+            if (sourceOperandEncoding != NULL)
+            {
+                *(instructionImage + instructionsPtr->IC + countEncoded++) = *(sourceOperandEncoding);
+                if (instructionsPtr->sourceOperand->numOfWords == 2) *(instructionImage + instructionsPtr->IC + countEncoded++) = *(sourceOperandEncoding + 1);
+            }
+
+            if (destinationOperandEncoding != NULL)
+            {
+                *(instructionImage + instructionsPtr->IC + countEncoded++) = *(destinationOperandEncoding);
+                if (instructionsPtr->destinationOperand->numOfWords == 2) *(instructionImage + instructionsPtr->IC + countEncoded++) = *(destinationOperandEncoding + 1);
+            }
         }
-        printf("encoding first word\n");
-        *(instructionImage + instructionsPtr->IC) = encodeFirstWord(instructionsPtr->command);
         instructionsPtr = instructionsPtr->next;
     }
 
@@ -78,47 +55,49 @@ int *startSecondIteration(IterationsData *firstIterData)
     return instructionImage;
 }
 
-/* encode operand according to the operand data retrieved in the first iteration */
+/* encode operand according to the operand data (label/register/value) retrieved in the first iteration */
 int *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType opType)
 {
-    printf("encoding operand!!\n");
+    printf("statring encodign operand. label is %s\n", operand->label);
     SymbolNode *labelNode = NULL;
     int *encoding;
+    // printf("encoding operand for label %d\n", operand->addressingMethod);
     switch (operand->addressingMethod)
     {
+        /* Immediate addressing - encoding the operand based upon its value */
         case IMMEDIATE_ADDRESING:
-            printf("immediate addressing!\n");
+            printf("immediate addressing\n");
             encoding = (int *) malloc(sizeof(int));
             *encoding = encodeImmediateAdressing(operand->value);
-            return encoding;
+            break;
 
+        /* labeled operands - encoding operand base and offset (in case of index addressing the operand register would be encoded in the second word) */
         case DIRECT_ADDRESING: case INDEX_ADDRESSING:
-            printf("direct addressing!\n");
+            printf("getting label\n");
             labelNode = getLabelNode(symbolTable, operand->label);
-            printf("got label for %s\n", operand->label);
             if (labelNode == NULL)
             {
                 fprintf(stderr, "Operand has invalid label %s!", operand->label);
-                return -1;
+                encoding = (int *) malloc(sizeof(int));
+                *encoding = -1;
+                break;
             }
             encoding = encodeDirectAdressing(labelNode);
-            printf("got result for %s\n", operand->label);
-            return encoding;
+            break;
     }
-
-    return 0;
+    
+    return encoding;
 }
 
-/* get lable node from the symbol table */
+/* Search in the symbol table for the compatible label node for the given label */
 SymbolNode *getLabelNode(SymbolNode *symbolTable, char *label)
 {   
+    printf("getting label node for %s\n", label);
     SymbolNode *ptr = symbolTable;
     while (ptr != NULL)
     {
-        printf("label - %s\n", ptr->symbolName);
         if (strcmp(ptr->symbolName, label) == 0) return ptr;
         ptr = ptr->next;
     }
     return NULL;
 }
-

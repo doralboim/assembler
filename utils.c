@@ -31,12 +31,16 @@ int isRegister(char *symbol)
     int registerNum;
 
     strcpy(ptr, symbol);
+    charRegisterNumber = (char *) malloc(sizeof(char));
+
     if (strlen(ptr) == 2)
     {
         if (*ptr == 'r' && isdigit(*(ptr + 1)))
         {
             *charRegisterNumber = *(ptr + 1);
-            return atoi(charRegisterNumber);
+            registerNum = atoi(charRegisterNumber);
+            free(charRegisterNumber);
+            return registerNum;
         }
     }
     else if (strlen(ptr) == 3)
@@ -72,14 +76,15 @@ int getNumberOfAllowedOperandsByCommand(char *command)
 /* check if a given addressing method is allowed for the given operand type (source / destination) with a given command */
 int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, OperandType operandType)
 {
+    int i;
     CommandNode commands[] = COMMANDS;
-    printf("got commands for %s\n", command);
+
     if (operandType != SOURCE && operandType != DESTINATION)
     {
-        printf("Invalid opernad type - expected source - %d or destination - %d but got %d\n", SOURCE, DESTINATION, operandType);
+        fprintf(stderr, "Invalid opernad type - expected source - %d or destination - %d but got %d\n", SOURCE, DESTINATION, operandType);
         return FALSE;
     }
-    int i = 0;
+
     for(i = 0 ; i < COMMANDS_AMOUNT; i++)
     {
         if (strcmp(command, commands[i].name) == 0)
@@ -94,16 +99,15 @@ int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, Op
             return FALSE;
         }
     }
-    printf("Invalid command: %s\n", command);
+    fprintf(stderr, "Invalid command: %s\n", command);
     return FALSE;
 }
 
 /* get the number of words for a given addressing method */
 int getWordsNumByAdressMethod(uint8_t addressMethod)
 {
-    printf("getting words number for address method\n");
-    const AddressMethodWords addressMethodWords[] = ADDRESSING_METHODS;
-    printf("words per address method : %d %d %d\n", addressMethodWords->method, addressMethodWords->numOfWords, addressMethodWords->methodNum);
+    const AddressMethodWords addressMethodWords[ADDRESS_METHOD_AMOUNT] = ADDRESSING_METHODS;
+    
     int i;
     for (i = 0; i < ADDRESS_METHOD_AMOUNT; i++)
     {
@@ -113,7 +117,7 @@ int getWordsNumByAdressMethod(uint8_t addressMethod)
             return addressMethodWords[i].numOfWords;
         }
     }
-    printf("error computing number of words\n");
+    
     return -1;
 }
 
@@ -136,9 +140,9 @@ int isIndexAdressing(char operand[], char label[], int *registerNumber)
             char registerNumberChar[10];
             *registerNumber = atoi(strncpy(registerNumberChar, (insideBrackets + 2), 2));
             if (*registerNumber <= 15 && *registerNumber >= 10) return TRUE;
-            printf("Register number is not supported - only a register between 10 to 15 is allowed but got %d\n", *registerNumber);
+            fprintf(stderr, "Register number is not supported - only a register between 10 to 15 is allowed but got %d\n", *registerNumber);
         }
-        printf("Illegal direct index register addressing for operand: %s\n", operand);
+        fprintf(stderr, "Illegal direct index register addressing for operand: %s\n", operand);
     }
     return FALSE;
 }
@@ -146,12 +150,13 @@ int isIndexAdressing(char operand[], char label[], int *registerNumber)
 /* check if direct addressing method and update value accordingly, otherwise return FALSE */
 int isImmediateAdressing(char operand[], long *value)
 {
+    
     if(operand[0] == '#')
     {
         char *end;
         *value = strtol(&operand[1], &end, 10);
         if (*end != '\0') return FALSE;
-        return value;
+        return TRUE;
     }
     return FALSE;
 }
@@ -160,13 +165,12 @@ int isImmediateAdressing(char operand[], long *value)
 operandData *addressingMethodByOperand(char operand[])
 {
     int result;
+    long value;
     operandData *resultData = (operandData *) malloc(sizeof(operandData));
 
     int registerNum;
     char label[MAX_SYMBOL_NAME_LENGTH];
     memset(label, '\0', sizeof(label));
-
-    long value;
 
     if((result = isRegister(operand)) != -1)
     {
@@ -176,7 +180,7 @@ operandData *addressingMethodByOperand(char operand[])
         printf("register direct addressing\n");
     }
     
-    else if((result =isIndexAdressing(operand, &label, &registerNum)))
+    else if((result =isIndexAdressing(operand, label, &registerNum)))
     {
         resultData->addressingMethod = INDEX_ADDRESSING;
         strcpy(resultData->label, label);

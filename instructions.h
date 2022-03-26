@@ -5,6 +5,7 @@
 
 typedef struct {
     uint8_t addressingMethod;
+    short numOfWords;
     char label[MAX_SYMBOL_NAME_LENGTH];
     union {
         int registerNum;
@@ -12,7 +13,7 @@ typedef struct {
     };
 } operandData;
 
-typedef struct instructionData *InstructionDataPtr;
+/* typedef struct instructionData *InstructionDataPtr; */
 
 typedef struct instruction_data {
     char command[32];
@@ -20,7 +21,7 @@ typedef struct instruction_data {
     int words;
     operandData *sourceOperand;
     operandData *destinationOperand;
-    InstructionDataPtr *next;
+    struct instruction_data *next;
 } InstructionData;
 
 

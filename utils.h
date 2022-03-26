@@ -6,7 +6,8 @@
 #include "instructions.h"
 
 /* from symbolTableHandler */
-int insertSymbolToTable(SymbolNode **tableHead, SymbolNode **tableTail, char *symbolName, int IC, SymbolAttribute attribute);
+int insertSymbolToTable(SymbolNode **tableHead, char *symbolName, int IC, SymbolAttribute attribute);
+
 /* from utils */
 int isLegalSymbol(char *symbol);
 int isRegister(char *symbol);
