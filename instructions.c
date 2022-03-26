@@ -6,17 +6,22 @@
 #include "instructions.h"
 
 /* Add instruction to linked list to be used in the second batch */
-void saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData **instructionsHead)
+int saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData **instructionsHead, int lineNum)
 {
     InstructionData *newNode; 
     newNode = (InstructionData *) malloc(sizeof(InstructionData));
-    if (newNode == NULL) printf("Memory cannot be allocated for saving instruction data!");
+    if (newNode == NULL)
+    {
+        fprintf(stderr, "Memory cannot be allocated for saving instruction data for %s!", command);
+        return FALSE;
+    }
 
     else {
         memset(newNode->command, '\0', strlen(command) + 1);
         strcpy(newNode->command, command);
         newNode->IC = ic;
         newNode->words = words;
+        newNode->lineNum = lineNum;
 
         newNode->sourceOperand = sourceOperand;
         newNode->destinationOperand = destinatinoOperand;
@@ -34,4 +39,6 @@ void saveInstructionData(char *command, int ic, int words, operandData *sourceOp
             ptr->next = newNode;
         }
     }
+
+    return TRUE;
 }

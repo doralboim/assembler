@@ -1,40 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+#define MIN_DATA_VALUE ((-1) * pow(2.0, MEMORY_PARTITION))
+#define MAX_DATA_VALUE (pow(2.0, MEMORY_PARTITION) - 1)
 
 #include "constants.h"
 
-int decimalToBinary(int n) {
-  int bin = 0;
-  int rem, i = 1;
-
-  while (n!=0) {
-    rem = n % 2;
-    n /= 2;
-    bin += rem * i;
-    i *= 10;
-  }
-
-  return bin;
-}
-
 /* encode numnbers and characters and insert to the data image, returning the increased DC */
-int encodeData(char line[], int dataImage[], int dc)
+long encodeData(char line[], long dataImage[], int dc)
 {
-    char *instruction, *token, *stringData;
-    int intToken, i = 1;
-    printf("dc is: %d\n", dc);
+    char *instruction, *token, *stringData, *residual;
+    int i = 1, countElements = 0;
+    long longToken;
     
     if ((instruction = strstr(line, DATA_INSTRUCTION)) != NULL)
     {
-        printf("instruction %s is data\n", instruction);
         token = strtok(instruction + strlen(DATA_INSTRUCTION), ",");
         while (token != NULL)
         {
             {
                 sscanf(token, "%s", token);
-                intToken = atoi(token);
-                dataImage[dc++] = intToken;
+                longToken = strtol(token, residual, 10);
+                if (longToken > MAX_DATA_VALUE || longToken < MIN_DATA_VALUE)
+                {
+                    fprintf(stderr, "Data value exceeds exceptable range. Allowed range is %ld - %ld but got %ld", MIN_DATA_VALUE, MAX_DATA_VALUE, longToken);
+                    return -1;                    
+                }
+                dataImage[dc++] = longToken;
+                countElements++;
                 token = strtok(NULL, ",");
             }
         }
@@ -43,10 +38,10 @@ int encodeData(char line[], int dataImage[], int dc)
         {
             instruction = strstr(line, STRING_INSTRUCTION);
             stringData = strstr(line, "\"");
-            while ((dataImage[dc++] = *(stringData + i++)) != '"') ;
+            while ((dataImage[dc++] = *(stringData + i++)) != '"') countElements++;
             dataImage[dc - 1] = 0;
         }
     
-    return dc;
+    return countElements > 0 ? dc : -1;
 }
 

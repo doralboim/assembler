@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "constants.h"
 #include "assembler.h"
@@ -9,32 +10,32 @@ int getCommandFunct(char *command);
 int getAddressingNum(uint8_t addressingMehtod);
 int registerByOperand(operandData *operand);
 
-unsigned int generate_a_r_e(char A_R_E_Value)
+unsigned long generate_a_r_e(char A_R_E_Value)
 {
     switch (A_R_E_Value)
     {
     case 'a':
-        return 1 << 18;
+        return (1 & 0xFFFF) << 18;
     case 'r':
-        return 1 << 17;
+        return (1 & 0xFFFF) << 17;
     case 'e':
-        return 1 << 16;
+        return (1 & 0xFFFF) << 16;
     default:
         return 0;
     }
 }
 
 
-int encodeFirstWord(char *command)
+long encodeFirstWord(char *command)
 {
-    unsigned int optcode, a_r_e, i;
+    unsigned long optcode, a_r_e, i;
     CommandNode commands[] = COMMANDS;
     a_r_e = generate_a_r_e('a');
     for (i = 0; i < COMMANDS_AMOUNT; i++)
     {
         if (strcmp(commands[i].name, command) == 0)
         {
-            optcode = (1 << commands[i].opcode);
+            optcode = (1 << commands[i].opcode) & 0xFFFF;
             break;
         }
     }
@@ -43,31 +44,29 @@ int encodeFirstWord(char *command)
 }
 
 
-int encodeSecWord(char *command, operandData *sourceOperand, operandData *destinationOperand)
+long encodeSecWord(char *command, operandData *sourceOperand, operandData *destinationOperand)
 {
-    int sourceEncoding = 0, desEncoding = 0;
-    int funct = getCommandFunct(command);
-    int sourceAddressing = sourceOperand != NULL? getAddressingNum(sourceOperand->addressingMethod) : 0;
-    int destinationAddressing = getAddressingNum(destinationOperand->addressingMethod);
+    long sourceEncoding = 0, desEncoding = 0;
+    long funct = getCommandFunct(command);
+    long sourceAddressing = sourceOperand != NULL? getAddressingNum(sourceOperand->addressingMethod) : 0;
+    long destinationAddressing = getAddressingNum(destinationOperand->addressingMethod);
 
     funct = funct << 12;
     sourceAddressing = sourceAddressing << 6;
     
-    int sourceRegister = sourceOperand != NULL? registerByOperand(sourceOperand) : 0;
-    int destinationRegister = registerByOperand(destinationOperand);
+    long sourceRegister = sourceOperand != NULL? registerByOperand(sourceOperand) : 0;
+    long destinationRegister = registerByOperand(destinationOperand);
     sourceRegister = sourceRegister << 8;
     destinationRegister = destinationRegister << 2;
-    // if (sourceRegister != -1) sourceEncoding = encodeDirectAdressing(sourceRegister);
-    // if (desRegister != -1) desEncoding = encodeDirectAdressing(desRegister);
     
-    unsigned a_r_e = generate_a_r_e('a');
+    unsigned long a_r_e = generate_a_r_e('a');
     return a_r_e | funct | sourceRegister | sourceAddressing | destinationRegister | destinationAddressing;
 }
 
 
-int encodeRegisterDirectAdressing(int registerNum, OperandType type)
+long encodeRegisterDirectAdressing(int registerNum, OperandType type)
 {
-    return type == DESTINATION? (registerNum << 2) | 3 : (registerNum << 8) | (3 << 6);
+    return type == DESTINATION? ((registerNum << 2) | 3) & 0xFFFF : ((registerNum << 8) | (3 << 6)) & 0xFFFF;
 }
 
 
@@ -79,9 +78,9 @@ int registerByOperand(operandData *operand)
 
 
 /* Encode according to the label value (base + offset) */
-int *encodeDirectAdressing(SymbolNode *label)
+long *encodeDirectAdressing(SymbolNode *label)
 {
-    int *result = (int *) malloc(2 * sizeof(int));
+    long *result = (long *) malloc(2 * sizeof(long));
     
     if (label->attribute1 != EXTERNAL)
     {
@@ -98,9 +97,12 @@ int *encodeDirectAdressing(SymbolNode *label)
     return result;
 }
 
-int encodeImmediateAdressing(int operandValue)
+/* when operand is encoded using immediate addressing, A/R/E bit is A and the rest 16 bits are operand value */
+long *encodeImmediateAdressing(short operandValue)
 {
-    return generate_a_r_e('a') | operandValue;
+    long *result = (long *) malloc(sizeof(long));
+    *result = (generate_a_r_e('a') | operandValue) & 0xFFFF;
+    return result;
 }
 
 /* return the command funct code */
@@ -119,4 +121,45 @@ int getAddressingNum(uint8_t addressingMehtod)
     int i;
     for (i = 0; i < ADDRESS_METHOD_AMOUNT && addressingMethods[i].method != addressingMehtod != 0; i++) ;
     return addressingMethods[i].method;
+}
+
+/* encode numnbers and characters and insert to the data image, returning the increased DC */
+long encodeData(char line[], long dataImage[], int dc)
+{
+    char *instruction, *token, *stringData;
+    int i = 1, countElements = 0, intToken;
+    
+    if ((instruction = strstr(line, DATA_INSTRUCTION)) != NULL)
+    {
+        token = strtok(instruction + strlen(DATA_INSTRUCTION), ",");
+        while (token != NULL)
+        {
+            {
+                sscanf(token, "%s", token);
+                intToken = atoi(token);
+                if (intToken > SHRT_MAX || intToken < SHRT_MIN)
+                {
+                    fprintf(stderr, "Data value exceeds exceptable range. Allowed range is %d - %d but got %d", SHRT_MIN, SHRT_MAX, intToken);
+                    return -1;                    
+                }
+                dataImage[dc++] = generate_a_r_e('a') | ((short)intToken & 0xFFFF);
+                countElements++;
+                token = strtok(NULL, ",");
+            }
+        }
+    }
+    else
+        {
+            instruction = strstr(line, STRING_INSTRUCTION);
+            stringData = strstr(line, "\"");
+            while (*(stringData + i) != '"')
+            {
+                dataImage[dc++] = generate_a_r_e('a') | *(stringData + i++);
+                countElements++;
+            }
+            // while ((dataImage[dc++] = generate_a_r_e("a") | *(stringData + i++)) != '"') countElements++;
+            dataImage[dc - 1] = 0;
+        }
+    
+    return countElements > 0 ? dc : -1;
 }

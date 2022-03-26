@@ -20,13 +20,13 @@ typedef struct symbol_node {
 typedef struct {
     SymbolNode *symbolTable;
     InstructionData *instructionData;
-    int *dataImage;
+    long *dataImage;
     int IC;
     int DC;
 } IterationsData;
 
 IterationsData *startAssemblerFirstIteration(char *fileName);
-int *startSecondIteration(IterationsData *firstIterData);
-void createOutputFiles(char *origFileName, int *binaryInstructions, IterationsData *assemblerIterationsData);
+long *startSecondIteration(IterationsData *firstIterData);
+void createOutputFiles(char *origFileName, long *binaryInstructions, IterationsData *assemblerIterationsData);
 
 #endif

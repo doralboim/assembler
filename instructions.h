@@ -9,7 +9,7 @@ typedef struct {
     char label[MAX_SYMBOL_NAME_LENGTH];
     union {
         int registerNum;
-        int value;
+        short value;
     };
 } operandData;
 
@@ -17,6 +17,7 @@ typedef struct {
 
 typedef struct instruction_data {
     char command[32];
+    int lineNum;
     int IC;
     int words;
     operandData *sourceOperand;
@@ -25,6 +26,6 @@ typedef struct instruction_data {
 } InstructionData;
 
 
-void saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData **instructionDataHead);
+int saveInstructionData(char *command, int ic, int words, operandData *sourceOperand, operandData *destinatinoOperand, InstructionData **instructionsHead, int lineNum);
 
 #endif

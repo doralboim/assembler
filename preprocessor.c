@@ -20,8 +20,10 @@ void insertMacroEnd(MacroNode **head, MacroNode *newNode);
 char *processFile(char *fileName)
 {
     int isMacro = FALSE, isSuccessfulLineAdder;
-    char line[MAX_LINE_SIZE], firstFieldInLine[MAX_LINE_SIZE], processedFileName[strlen(fileName) + 3];
+    char line[MAX_LINE_SIZE], firstFieldInLine[MAX_LINE_SIZE];
     char macroName[MAX_MACRO_NAME];
+    char *processedFileAbsPath = (char *) malloc(sizeof(char) * PATH_MAX);
+    char *processedFileName = (char *) malloc(sizeof(char) * (strlen(fileName) + 3));
     int macroData;
     
     FILE *originalFp, *processedFp;
@@ -31,7 +33,6 @@ char *processFile(char *fileName)
     char cwd[PATH_MAX];
     getcwd(cwd, sizeof(cwd));
     strcat(strcpy(processedFileName, fileName), ".am");
-    char processedFileAbsPath[PATH_MAX];
     sprintf(processedFileAbsPath, "%s/%s", cwd, processedFileName);
 
     char *origFileName = addExetensionToFile(fileName, ".as");
@@ -39,7 +40,7 @@ char *processFile(char *fileName)
     if (((originalFp = fopen(origFileName, "r")) == NULL) ||
         ((processedFp = fopen(&cwd[0] != NULL ? processedFileAbsPath : processedFileName, "w")) == NULL))
     {
-        printf("could not open files to preprocess!!\n");
+        fprintf(stderr, "could not open files to preprocess!!\n");
         exit(1);
     }
     else
@@ -74,7 +75,6 @@ char *processFile(char *fileName)
                 if (macroHead == NULL) macroHead = currentMacro;
                 else insertMacroEnd(&macroHead, currentMacro);
                 int j=0;
-                for (j=0; j<currentMacro->rowsCount; j++) printf("%d for %s: %s\n", j, currentMacro->name, currentMacro->data + j);
             }
 
             /* "regular line" without macro reference - copy it to the processed file */
@@ -97,13 +97,7 @@ void writeMacro(FILE *fp, char *macroName, MacroNode *macrosHead)
     MacroNode *ptr = macrosHead;
     while (strcmp(ptr->name, macroName) != 0) ptr = ptr->next;
     int i;
-    for (i = 0; i < ptr->rowsCount; i++)
-    {
-        
-        printf("writing: %s\n", ptr->data + (i * MAX_LINE_SIZE));
-        fputs(ptr->data + (i * MAX_LINE_SIZE), fp);
-    }
-    printf("Successfully wrote macro %s to file\n", macroName);
+    for (i = 0; i < ptr->rowsCount; i++) fputs(ptr->data + (i * MAX_LINE_SIZE), fp);
 }
 
 /* Insert new macro node to the last place the the macros table */
@@ -131,7 +125,6 @@ int addLineToMacro(char *line, MacroNode **macro)
 {
     if ((*macro)->rowsCount >= (*macro)->dataLength - 1)
     {
-        printf("create new space for (*macro) %s\n", (*macro)->name);
         (*macro)->data = realloc((*macro)->data, ((*macro)->dataLength + MACRO_LINE_INCREAMENT_FACTOR) * sizeof (char) * MAX_LINE_SIZE);
         if ((*macro)->data == NULL) return FALSE; /* not enough space for (*macro) */
         (*macro)->dataLength += MACRO_LINE_INCREAMENT_FACTOR;
@@ -139,7 +132,6 @@ int addLineToMacro(char *line, MacroNode **macro)
     memset(((*macro)->data + (((*macro)->rowsCount) * MAX_LINE_SIZE)), '\0', MAX_LINE_SIZE);
     strcpy(((*macro)->data) + (((*macro)->rowsCount) * MAX_LINE_SIZE), line);
     ((*macro)->rowsCount)++;
-    printf("added %s to %s:%d\n", ((*macro)->data + (*macro)->rowsCount - 1), (*macro)->name, (*macro)->rowsCount);
     return TRUE;
 }
 

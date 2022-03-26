@@ -3,11 +3,12 @@
 
 #include "assembler.h"
 
-unsigned int generate_a_r_e(char A_R_E_Value);
-int encodeFirstWord(char *command);
-int encodeRegisterDirectAdressing(int registerNum, OperandType type);
-int *encodeDirectAdressing(SymbolNode *label);
-int encodeSecWord(char *command, operandData *sourceOperand, operandData *destinationOperand);
-int encodeImmediateAdressing(int operandValue);
+long encodeData(char line[], long dataImage[], int dc);
+unsigned long generate_a_r_e(char A_R_E_Value);
+long encodeFirstWord(char *command);
+long encodeRegisterDirectAdressing(int registerNum, OperandType type);
+long *encodeDirectAdressing(SymbolNode *label);
+long encodeSecWord(char *command, operandData *sourceOperand, operandData *destinationOperand);
+long *encodeImmediateAdressing(int operandValue);
 
 #endif

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "assembler.h"
 #include "constants.h"
@@ -90,12 +91,8 @@ int isAllowedAddressingMethodByCommand(char command[], uint8_t addressMethod, Op
         if (strcmp(command, commands[i].name) == 0)
         {
             uint8_t opType = operandType == SOURCE? commands[i].sourceAdressingMethods: commands[i].targetAdressingMethods;
-            if ((addressMethod & opType) > 0)
-            {
-                printf("allowed addresing method for %s\n", command);
-                return TRUE;
-            }
-            printf("Invalid addressing method for command '%s'\n", command);
+            if ((addressMethod & opType) > 0) return TRUE;
+            fprintf(stderr, "Invalid addressing method for command '%s'\n", command);
             return FALSE;
         }
     }
@@ -113,7 +110,6 @@ int getWordsNumByAdressMethod(uint8_t addressMethod)
     {
         if (addressMethodWords[i].method == addressMethod)
         {
-            printf("num of words for %d addresing method: %d\n", addressMethod, addressMethodWords[i].numOfWords);
             return addressMethodWords[i].numOfWords;
         }
     }
@@ -155,7 +151,12 @@ int isImmediateAdressing(char operand[], long *value)
     {
         char *end;
         *value = strtol(&operand[1], &end, 10);
-        if (*end != '\0') return FALSE;
+        if (*end != '\0') return -1;
+        if (*value > SHRT_MAX || *value < SHRT_MIN)
+        {
+            fprintf(stderr, "Operand %s got the value %ld which exceeds allowed value range\n", operand, *value);
+            return -1;
+        }
         return TRUE;
     }
     return FALSE;
@@ -177,7 +178,6 @@ operandData *addressingMethodByOperand(char operand[])
         resultData->addressingMethod = REGISTER_DIRECT_ADDRESSING;
         resultData->registerNum = result;
         memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
-        printf("register direct addressing\n");
     }
     
     else if((result =isIndexAdressing(operand, label, &registerNum)))
@@ -186,15 +186,14 @@ operandData *addressingMethodByOperand(char operand[])
         strcpy(resultData->label, label);
         resultData->registerNum = registerNum;
         return resultData;
-        printf("index addressing\n");
     }
 
     else if((result = isImmediateAdressing(operand, &value)))
     {
+        if (result == -1) return NULL;
         resultData->addressingMethod = IMMEDIATE_ADDRESING;
-        resultData->value = value;
+        resultData->value = (short)value;
         memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
-        printf("immediate addressing\n");
     }
 
     else
@@ -202,7 +201,6 @@ operandData *addressingMethodByOperand(char operand[])
         resultData->addressingMethod = DIRECT_ADDRESING;
         strcpy(resultData->label, operand);
         resultData->registerNum = -1;
-        printf("direct addressing\n");
     }
 
     return resultData;
