@@ -72,8 +72,8 @@ long encodeRegisterDirectAdressing(int registerNum, OperandType type)
 
 int registerByOperand(operandData *operand)
 {
-    if (operand->addressingMethod == IMMEDIATE_ADDRESING || operand->registerNum == -1) return 0;
-    return operand->registerNum;
+    if (operand->addressingMethod == IMMEDIATE_ADDRESING || operand->numericValue.registerNum == -1) return 0;
+    return operand->numericValue.registerNum;
 }
 
 

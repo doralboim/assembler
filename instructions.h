@@ -10,7 +10,7 @@ typedef struct {
     union {
         int registerNum;
         short value;
-    };
+    } numericValue;
 } operandData;
 
 /* typedef struct instructionData *InstructionDataPtr; */

@@ -176,7 +176,7 @@ operandData *addressingMethodByOperand(char operand[])
     if((result = isRegister(operand)) != -1)
     {
         resultData->addressingMethod = REGISTER_DIRECT_ADDRESSING;
-        resultData->registerNum = result;
+        resultData->numericValue.registerNum = result;
         memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
     }
     
@@ -184,7 +184,7 @@ operandData *addressingMethodByOperand(char operand[])
     {
         resultData->addressingMethod = INDEX_ADDRESSING;
         strcpy(resultData->label, label);
-        resultData->registerNum = registerNum;
+        resultData->numericValue.registerNum = registerNum;
         return resultData;
     }
 
@@ -192,7 +192,7 @@ operandData *addressingMethodByOperand(char operand[])
     {
         if (result == -1) return NULL;
         resultData->addressingMethod = IMMEDIATE_ADDRESING;
-        resultData->value = (short)value;
+        resultData->numericValue.value = (short)value;
         memset(resultData->label, '\0', MAX_SYMBOL_NAME_LENGTH);
     }
 
@@ -200,7 +200,7 @@ operandData *addressingMethodByOperand(char operand[])
     {   
         resultData->addressingMethod = DIRECT_ADDRESING;
         strcpy(resultData->label, operand);
-        resultData->registerNum = -1;
+        resultData->numericValue.registerNum = -1;
     }
 
     return resultData;

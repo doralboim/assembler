@@ -37,6 +37,7 @@ char *processFile(char *fileName)
 
     char *origFileName = addExetensionToFile(fileName, ".as");
 
+    printf("\n\nWorking on file %s\n", origFileName);
     if (((originalFp = fopen(origFileName, "r")) == NULL) ||
         ((processedFp = fopen(&cwd[0] != NULL ? processedFileAbsPath : processedFileName, "w")) == NULL))
     {

@@ -25,8 +25,6 @@ long *startSecondIteration(IterationsData *firstIterData)
 
     while (instructionsPtr != NULL)
     {
-        // printf("working on %s - num words: %d IC = %d\n", instructionsPtr->command, instructionsPtr->words, instructionsPtr->IC);
-
         *(instructionImage + instructionsPtr->IC) = encodeFirstWord(instructionsPtr->command);
         if (*(instructionImage + instructionsPtr->IC) == -1) errors++;
         
@@ -70,7 +68,7 @@ long *startSecondIteration(IterationsData *firstIterData)
     if (errors > 0)
     {
         fprintf(stderr, "Got %d errors on the second iteration, program stops\n", errors);
-        exit(1);
+        return NULL;
     }
 
     return instructionImage;
@@ -86,7 +84,7 @@ long *encodeOperand(operandData *operand, SymbolNode *symbolTable, OperandType o
     {
         /* Immediate addressing - encoding the operand based upon its value */
         case IMMEDIATE_ADDRESING:
-            encoding = encodeImmediateAdressing(operand->value);
+            encoding = encodeImmediateAdressing(operand->numericValue.value);
             break;
 
         /* labeled operands - encoding operand base and offset (in case of index addressing the operand register would be encoded in the second word) */

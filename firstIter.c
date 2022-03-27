@@ -152,7 +152,7 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     if (errors > 0)
     {
         fprintf(stderr, "%d errors occured in the first assembler iteration, program stops!", errors);
-        exit(1);
+        return NULL;
     }
 
     /* Reallocating data to follow code instructions */
@@ -169,26 +169,6 @@ IterationsData *startAssemblerFirstIteration(char *fileName)
     fclose(fp);
     return response;
 
-}
-
-void printData(IterationsData *response)
-{
-    SymbolNode *symPtr = response->symbolTable;
-    InstructionData *insPtr = response->instructionData;
-    int i;
-    for (i=0; i < response->DC; i++) printf("data image on place %d is: %ld\n", i, (response->dataImage)[i]);
-
-    while (symPtr != NULL)
-    {
-        printf("symbol: %s %d %d\n", symPtr->symbolName, symPtr->value, symPtr->attribute1);
-        symPtr = symPtr->next;
-    }
-
-    while (insPtr != NULL)
-    {
-        printf("instructions: %s %d %d\n", insPtr->command, insPtr->IC, insPtr->words);
-        insPtr = insPtr->next;
-    }
 }
 
 /* The core function of the first iteration, which analyses the given line, parses the operands and compute the machine words */
